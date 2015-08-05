@@ -1,0 +1,29 @@
+{
+  "private": true,
+  "name": "uibench-base",
+  "version": "0.1.0",
+  "description": "uibench base library",
+  "license": "BSD",
+  "homepage": "https://github.com/localvoid/uibench-base",
+  "repository": "https://github.com/localvoid/uibench-base",
+  "author": {
+    "name": "Boris Kaul",
+    "email": "localvoid@gmail.com",
+    "url": "https://github.com/localvoid"
+  },
+  "keywords": [
+    "virtual",
+    "dom",
+    "vdom",
+    "browser",
+    "benchmark"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "gulp": "~3.9.0",
+    "closurecompiler": "~1.5.2",
+    "gulp-closure-compiler": "~0.3.0",
+    "gulp-gh-pages": "~0.5.2",
+    "browser-sync": "~2.8.2"
+  }
+}
