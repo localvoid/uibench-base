@@ -48,7 +48,7 @@ gulp.task('serve', ['default'], function() {
 });
 
 gulp.task('deploy', ['default'], function () {
-  return gulp.src(DEST + '/**/*')
+  return gulp.src('./dist/**/*')
       .pipe(ghPages());
 });
 
