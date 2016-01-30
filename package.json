@@ -20,10 +20,9 @@
   ],
   "dependencies": {},
   "devDependencies": {
+    "browser-sync": "~2.8.2",
+    "google-closure-compiler": "^20160125.0.0",
     "gulp": "~3.9.0",
-    "closurecompiler": "~1.5.2",
-    "gulp-closure-compiler": "~0.3.0",
-    "gulp-gh-pages": "~0.5.2",
-    "browser-sync": "~2.8.2"
+    "gulp-gh-pages": "~0.5.2"
   }
 }
