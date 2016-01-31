@@ -12,7 +12,7 @@ gulp.task('scripts', function() {
         js_output_file: 'uibench.js',
         dependency_mode: 'STRICT',
         entry_point: 'goog:uibench.export',
-        compilation_level: 'ADVANCED_OPTIMIZATIONS',
+        compilation_level: 'SIMPLE_OPTIMIZATIONS',
         language_in: 'ECMASCRIPT6_STRICT',
         language_out: 'ECMASCRIPT5_STRICT',
         output_wrapper: '(function(){%output%}).call();',
