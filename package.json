@@ -1,7 +1,10 @@
 {
   "private": true,
   "name": "uibench-base",
-  "version": "0.1.0",
+  "main": "dist/umd/uibench.js",
+  "jsnext:main": "dist/es6/uibench.js",
+  "typings": "dist/typings/uibench.d.ts",
+  "version": "0.1.1",
   "description": "uibench base library",
   "license": "BSD",
   "homepage": "https://github.com/localvoid/uibench-base",
@@ -20,9 +23,16 @@
   ],
   "dependencies": {},
   "devDependencies": {
-    "browser-sync": "~2.8.2",
-    "google-closure-compiler": "^20160125.0.0",
-    "gulp": "~3.9.0",
-    "gulp-gh-pages": "~0.5.2"
+    "del": "^2.2.0",
+    "gulp": "github:gulpjs/gulp#4.0",
+    "gulp-gh-pages": "^0.5.4",
+    "gulp-tslint": "^5.0.0",
+    "gulp-typescript": "^2.13.4",
+    "merge2": "^1.0.2",
+    "rollup": "^0.26.3",
+    "rollup-plugin-replace": "^1.1.0",
+    "rollup-plugin-typescript": "^0.7.5",
+    "tslint": "^3.10.2",
+    "typescript": "^1.9.0-dev.20160602-1.0"
   }
 }
