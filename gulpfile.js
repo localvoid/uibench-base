@@ -85,7 +85,10 @@ function deploy() {
     .pipe(ghPages());
 }
 
+const dist = parallel(series(buildES6, distES6), distUMD);
+const distGHPages = parallel(distGHPagesCSS, distGHPagesJS);
+
 exports.clean = clean;
-exports.dist = series(clean, parallel(series(buildES6, distES6), distUMD));
-exports.distGHPages = parallel(distGHPagesCSS, distGHPagesJS);
-exports.deploy = deploy;
+exports.dist = series(clean, dist);
+exports.distGHPages = series(clean, dist, distGHPages);
+exports.deploy = series(clean, dist, distGHPages, deploy);

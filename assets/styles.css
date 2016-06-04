@@ -14,6 +14,7 @@ html, body {
 .ProgressBar_inner {
   background: #2a2;
   height: 5px;
+  transition: width 0.5s ease-out;
 }
 
 .Table {
