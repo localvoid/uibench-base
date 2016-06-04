@@ -3,6 +3,19 @@ html, body {
   padding: 0;
 }
 
+.ProgressBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+}
+
+.ProgressBar_inner {
+  background: #2a2;
+  height: 5px;
+}
+
 .Table {
   border-spacing: 10px;
   border-collapse: collapse;

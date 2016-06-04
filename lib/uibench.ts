@@ -464,12 +464,14 @@ export function init(name: string, version: string): Config {
 export type Result = {[name: string]: number[]};
 export type UpdateHandler = (state: AppState, type: "init" | "update") => void;
 export type FinishHandler = (result: Result) => void;
+export type ProgressHandler = (progress: number) => void;
 
 export class Executor {
   iterations: number;
   groups: Group[];
   onUpdate: UpdateHandler;
   onFinish: FinishHandler;
+  onProgress: ProgressHandler;
 
   private _samples: Result;
   private _state: "init" | "update";
@@ -477,11 +479,13 @@ export class Executor {
   private _currentGroupState: number;
   private _currentIteration: number;
 
-  constructor(iterations: number, groups: Group[], onUpdate: UpdateHandler, onFinish: FinishHandler) {
+  constructor(iterations: number, groups: Group[], onUpdate: UpdateHandler, onFinish: FinishHandler,
+      onProgress: ProgressHandler) {
     this.iterations = iterations;
     this.groups = groups;
     this.onUpdate = onUpdate;
     this.onFinish = onFinish;
+    this.onProgress = onProgress;
 
     this._samples = {};
     this._state = "init";
@@ -505,6 +509,9 @@ export class Executor {
       this.onUpdate(group.to[this._currentGroupState++], "update");
       t = window.performance.now() - t;
 
+      this.onProgress(
+        (this._currentIteration * this.groups.length + this._currentGroup) / (this.groups.length * this.iterations));
+
       let samples = this._samples[group.name];
       if (samples === undefined) {
         samples = this._samples[group.name] = [];
@@ -527,6 +534,7 @@ export class Executor {
             requestAnimationFrame(this._next);
           } else {
             this.onFinish(this._samples);
+            this.onProgress(1);
           }
         }
       }
@@ -553,20 +561,32 @@ export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: s
         tests = tests.filter((t) => t.name.indexOf(filter as string) !== -1);
       }
 
+      const progressBar = document.createElement("div");
+      progressBar.className = "ProgressBar";
+      const progressBarInner = document.createElement("div");
+      progressBarInner.className = "ProgressBar_inner";
+      progressBarInner.style.width = "0";
+      document.body.appendChild(progressBar);
+      progressBar.appendChild(progressBarInner);
+
       if (tests) {
-        const e = new Executor(config.iterations, tests, onUpdate, (samples) => {
-          onFinish(samples);
-          if (config.report) {
-            window.opener.postMessage({
-              "type": "report",
-              "data": {
-                "name": name,
-                "version": config.version,
-                "samples": samples,
-              },
-            }, "*");
-          }
-        });
+        const e = new Executor(config.iterations, tests, onUpdate,
+          (samples) => {
+            onFinish(samples);
+            if (config.report) {
+              window.opener.postMessage({
+                "type": "report",
+                "data": {
+                  "name": name,
+                  "version": config.version,
+                  "samples": samples,
+                },
+              }, "*");
+            }
+          },
+          (progress) => {
+            progressBarInner.style.width = `${Math.round(progress * 100)}%`;
+          });
         e.run();
       } else {
         onFinish({});

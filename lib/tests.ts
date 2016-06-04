@@ -3,7 +3,6 @@ import {AppState, HomeState, TableState, AnimState, TreeState} from "./state";
 import {animAdvanceEach, treeCreate} from "./actions";
 
 function tableTests(onUpdate: UpdateHandler): void {
-  const t = TableState.create(2, 2);
   const state = new AppState(
     "table",
     new HomeState(),
