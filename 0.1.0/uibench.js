@@ -252,7 +252,6 @@
     }
 
     function tableTests(onUpdate) {
-        var t = TableState.create(2, 2);
         var state = new AppState("table", new HomeState(), TableState.create(2, 2), AnimState.create(0), TreeState.create([0]));
         state.table.items[0].id = 300;
         state.table.items[1].id = 301;
@@ -751,7 +750,7 @@
         return config;
     }
     var Executor = (function () {
-        function Executor(iterations, groups, onUpdate, onFinish) {
+        function Executor(iterations, groups, onUpdate, onFinish, onProgress) {
             var _this = this;
             this._next = function () {
                 var group = _this.groups[_this._currentGroup];
@@ -764,6 +763,7 @@
                     var t = window.performance.now();
                     _this.onUpdate(group.to[_this._currentGroupState++], "update");
                     t = window.performance.now() - t;
+                    _this.onProgress((_this._currentIteration * _this.groups.length + _this._currentGroup) / (_this.groups.length * _this.iterations));
                     var samples = _this._samples[group.name];
                     if (samples === undefined) {
                         samples = _this._samples[group.name] = [];
@@ -788,6 +788,7 @@
                             }
                             else {
                                 _this.onFinish(_this._samples);
+                                _this.onProgress(1);
                             }
                         }
                     }
@@ -797,6 +798,7 @@
             this.groups = groups;
             this.onUpdate = onUpdate;
             this.onFinish = onFinish;
+            this.onProgress = onProgress;
             this._samples = {};
             this._state = "init";
             this._currentGroup = 0;
@@ -824,6 +826,13 @@
                 if (tests && filter) {
                     tests = tests.filter(function (t) { return t.name.indexOf(filter) !== -1; });
                 }
+                var progressBar = document.createElement("div");
+                progressBar.className = "ProgressBar";
+                var progressBarInner = document.createElement("div");
+                progressBarInner.className = "ProgressBar_inner";
+                progressBarInner.style.width = "0";
+                document.body.appendChild(progressBar);
+                progressBar.appendChild(progressBarInner);
                 if (tests) {
                     var e = new Executor(config.iterations, tests, onUpdate, function (samples) {
                         onFinish(samples);
@@ -837,6 +846,8 @@
                                 },
                             }, "*");
                         }
+                    }, function (progress) {
+                        progressBarInner.style.width = Math.round(progress * 100) + "%";
                     });
                     e.run();
                 }
