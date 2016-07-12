@@ -174,10 +174,10 @@ export function init(name: string, version: string): Config {
       new Group("table/[30,2]/render", initialTable, dupe(table30_2, 2)),
       new Group("table/[15,2]/render", initialTable, dupe(table15_2, 2)),
 
-      new Group("table/[30,4]/removeAll", table30_4, dupe(initial, 2)),
-      new Group("table/[15,4]/removeAll", table15_4, dupe(initial, 2)),
-      new Group("table/[30,2]/removeAll", table30_2, dupe(initial, 2)),
-      new Group("table/[15,2]/removeAll", table15_2, dupe(initial, 2)),
+      new Group("table/[30,4]/removeAll", table30_4, dupe(initialTable, 2)),
+      new Group("table/[15,4]/removeAll", table15_4, dupe(initialTable, 2)),
+      new Group("table/[30,2]/removeAll", table30_2, dupe(initialTable, 2)),
+      new Group("table/[15,2]/removeAll", table15_2, dupe(initialTable, 2)),
 
       new Group("table/[30,4]/sort/0", table30_4, dupe(tableSortBy(table30_4, 0), 2)),
       new Group("table/[15,4]/sort/0", table15_4, dupe(tableSortBy(table15_4, 0), 2)),
@@ -253,9 +253,9 @@ export function init(name: string, version: string): Config {
       new Group("tree/[5,10]/render", initialTree, dupe(tree5_10, 2)),
       new Group("tree/[10,5]/render", initialTree, dupe(tree10_5, 2)),
 
-      new Group("tree/[50]/removeAll", tree50, dupe(initial, 2)),
-      new Group("tree/[5,10]/removeAll", tree5_10, dupe(initial, 2)),
-      new Group("tree/[10,5]/removeAll", tree10_5, dupe(initial, 2)),
+      new Group("tree/[50]/removeAll", tree50, dupe(initialTree, 2)),
+      new Group("tree/[5,10]/removeAll", tree5_10, dupe(initialTree, 2)),
+      new Group("tree/[10,5]/removeAll", tree10_5, dupe(initialTree, 2)),
 
       new Group("tree/[50]/[reverse]", tree50, dupe(treeTransform(tree50, [reverse]), 2)),
       new Group("tree/[5,10]/[reverse]", tree5_10, dupe(treeTransform(tree5_10, [reverse]), 2)),
@@ -320,10 +320,10 @@ export function init(name: string, version: string): Config {
       new Group("table/[100,2]/render", initialTable, dupe(table100_2, 2)),
       new Group("table/[50,2]/render", initialTable, dupe(table50_2, 2)),
 
-      new Group("table/[100,4]/removeAll", table100_4, dupe(initial, 2)),
-      new Group("table/[50,4]/removeAll", table50_4, dupe(initial, 2)),
-      new Group("table/[100,2]/removeAll", table100_2, dupe(initial, 2)),
-      new Group("table/[50,2]/removeAll", table50_2, dupe(initial, 2)),
+      new Group("table/[100,4]/removeAll", table100_4, dupe(initialTable, 2)),
+      new Group("table/[50,4]/removeAll", table50_4, dupe(initialTable, 2)),
+      new Group("table/[100,2]/removeAll", table100_2, dupe(initialTable, 2)),
+      new Group("table/[50,2]/removeAll", table50_2, dupe(initialTable, 2)),
 
       new Group("table/[100,4]/sort/0", table100_4, dupe(tableSortBy(table100_4, 0), 2)),
       new Group("table/[50,4]/sort/0", table50_4, dupe(tableSortBy(table50_4, 0), 2)),
@@ -408,10 +408,10 @@ export function init(name: string, version: string): Config {
       new Group("tree/[10,50]/render", initialTree, dupe(tree10_50, 2)),
       new Group("tree/[5,100]/render", initialTree, dupe(tree5_100, 2)),
 
-      new Group("tree/[500]/removeAll", tree500, dupe(initial, 2)),
-      new Group("tree/[50,10]/removeAll", tree50_10, dupe(initial, 2)),
-      new Group("tree/[10,50]/removeAll", tree10_50, dupe(initial, 2)),
-      new Group("tree/[5,100]/removeAll", tree5_100, dupe(initial, 2)),
+      new Group("tree/[500]/removeAll", tree500, dupe(initialTree, 2)),
+      new Group("tree/[50,10]/removeAll", tree50_10, dupe(initialTree, 2)),
+      new Group("tree/[10,50]/removeAll", tree10_50, dupe(initialTree, 2)),
+      new Group("tree/[5,100]/removeAll", tree5_100, dupe(initialTree, 2)),
 
       new Group("tree/[500]/[reverse]", tree500, dupe(treeTransform(tree500, [reverse]), 2)),
       new Group("tree/[50,10]/[reverse]", tree50_10, dupe(treeTransform(tree50_10, [reverse]), 2)),
