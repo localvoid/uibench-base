@@ -617,6 +617,8 @@
                 new Group("tree/[50]/[moveFromStartToEnd(1)]", tree50, dupe(treeTransform(tree50, [moveFromStartToEnd(1)]), 2)),
                 new Group("tree/[5,10]/[moveFromStartToEnd(1)]", tree5_10, dupe(treeTransform(tree5_10, [moveFromStartToEnd(1)]), 2)),
                 new Group("tree/[10,5]/[moveFromStartToEnd(1)]", tree10_5, dupe(treeTransform(tree10_5, [moveFromStartToEnd(1)]), 2)),
+                // special use case that should trigger worst case scenario for kivi library
+                new Group("tree/[50]/[kivi_worst_case]", tree50, dupe(treeTransform(treeTransform(treeTransform(tree50, [removeFirst(1)]), [removeLast(1)]), [reverse]), 2)),
             ];
         }
         else {
@@ -745,6 +747,8 @@
                 new Group("tree/[50,10]/[moveFromStartToEnd(1)]", tree50_10, dupe(treeTransform(tree50_10, [moveFromStartToEnd(1)]), 2)),
                 new Group("tree/[10,50]/[moveFromStartToEnd(1)]", tree10_50, dupe(treeTransform(tree10_50, [moveFromStartToEnd(1)]), 2)),
                 new Group("tree/[5,100]/[moveFromStartToEnd(1)]", tree5_100, dupe(treeTransform(tree5_100, [moveFromStartToEnd(1)]), 2)),
+                // special use case that should trigger worst case scenario for kivi library
+                new Group("tree/[500]/[kivi_worst_case]", tree500, dupe(treeTransform(treeTransform(treeTransform(tree500, [removeFirst(1)]), [removeLast(1)]), [reverse]), 2)),
             ];
         }
         return config;
