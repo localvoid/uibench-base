@@ -2,7 +2,7 @@ import {AppState, HomeState, TableState, AnimState, TreeState} from "./state";
 import {animAdvanceEach, switchTo, tableCreate, treeCreate, tableSortBy, tableFilterBy, tableActivateEach,
   treeTransform} from "./actions";
 import {reverse, insertFirst, insertLast, removeFirst, removeLast, moveFromEndToStart,
-  moveFromStartToEnd} from "./tree_transformers";
+  moveFromStartToEnd, snabbdomWorstCase} from "./tree_transformers";
 import {specTest, scuTest, recyclingTest} from "./tests";
 
 // performance.now() polyfill
@@ -295,6 +295,11 @@ export function init(name: string, version: string): Config {
       new Group("tree/[50]/[kivi_worst_case]", tree50, dupe(
         treeTransform(treeTransform(treeTransform(tree50, [removeFirst(1)]), [removeLast(1)]), [reverse]),
         2)),
+
+      // special use case that should trigger worst case scenario for snabbdom library
+      new Group("tree/[50]/[snabbdom_worst_case]", tree50, dupe(
+        treeTransform(tree50, [snabbdomWorstCase]),
+        2)),
     ];
   } else {
     let table100_4 = tableCreate(initialTable, 100, 4);
@@ -464,6 +469,11 @@ export function init(name: string, version: string): Config {
       // special use case that should trigger worst case scenario for kivi library
       new Group("tree/[500]/[kivi_worst_case]", tree500, dupe(
         treeTransform(treeTransform(treeTransform(tree500, [removeFirst(1)]), [removeLast(1)]), [reverse]),
+        2)),
+
+      // special use case that should trigger worst case scenario for snabbdom library
+      new Group("tree/[500]/[snabbdom_worst_case]", tree500, dupe(
+        treeTransform(tree500, [snabbdomWorstCase]),
         2)),
     ];
   }

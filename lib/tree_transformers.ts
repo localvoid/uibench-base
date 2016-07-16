@@ -12,6 +12,14 @@ export function reverse(children: TreeNodeState[]): TreeNodeState[] {
   return r;
 }
 
+export function snabbdomWorstCase(children: TreeNodeState[]): TreeNodeState[] {
+  const r = children.slice();
+  const a = r.shift()!;
+  const b = r.splice(r.length - 2, 1);
+  r.push(a, b[0]);
+  return r;
+}
+
 export function insertFirst(n: number): TreeTransformer {
   return function(children: TreeNodeState[]): TreeNodeState[] {
     children = children.slice();

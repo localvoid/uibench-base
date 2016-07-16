@@ -196,6 +196,13 @@
         r.reverse();
         return r;
     }
+    function snabbdomWorstCase(children) {
+        var r = children.slice();
+        var a = r.shift();
+        var b = r.splice(r.length - 2, 1);
+        r.push(a, b[0]);
+        return r;
+    }
     function insertFirst(n) {
         return function (children) {
             children = children.slice();
@@ -619,6 +626,8 @@
                 new Group("tree/[10,5]/[moveFromStartToEnd(1)]", tree10_5, dupe(treeTransform(tree10_5, [moveFromStartToEnd(1)]), 2)),
                 // special use case that should trigger worst case scenario for kivi library
                 new Group("tree/[50]/[kivi_worst_case]", tree50, dupe(treeTransform(treeTransform(treeTransform(tree50, [removeFirst(1)]), [removeLast(1)]), [reverse]), 2)),
+                // special use case that should trigger worst case scenario for snabbdom library
+                new Group("tree/[50]/[snabbdom_worst_case]", tree50, dupe(treeTransform(tree50, [snabbdomWorstCase]), 2)),
             ];
         }
         else {
@@ -749,6 +758,8 @@
                 new Group("tree/[5,100]/[moveFromStartToEnd(1)]", tree5_100, dupe(treeTransform(tree5_100, [moveFromStartToEnd(1)]), 2)),
                 // special use case that should trigger worst case scenario for kivi library
                 new Group("tree/[500]/[kivi_worst_case]", tree500, dupe(treeTransform(treeTransform(treeTransform(tree500, [removeFirst(1)]), [removeLast(1)]), [reverse]), 2)),
+                // special use case that should trigger worst case scenario for snabbdom library
+                new Group("tree/[500]/[snabbdom_worst_case]", tree500, dupe(treeTransform(tree500, [snabbdomWorstCase]), 2)),
             ];
         }
         return config;
