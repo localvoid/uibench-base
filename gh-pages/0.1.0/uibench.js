@@ -630,6 +630,8 @@
                 new Group("tree/[50]/[snabbdom_worst_case]", tree50, dupe(treeTransform(tree50, [snabbdomWorstCase]), 2)),
                 // special use case that should trigger worst case scenario for react library
                 new Group("tree/[50]/[react_worst_case]", tree50, dupe(treeTransform(treeTransform(treeTransform(tree50, [removeFirst(1)]), [removeLast(1)]), [moveFromEndToStart(1)]), 2)),
+                // special use case that should trigger worst case scenario for virtual-dom library
+                new Group("tree/[50]/[virtual_dom_worst_case]", tree50, dupe(treeTransform(tree50, [moveFromStartToEnd(2)]), 2)),
             ];
         }
         else {
@@ -764,6 +766,8 @@
                 new Group("tree/[500]/[snabbdom_worst_case]", tree500, dupe(treeTransform(tree500, [snabbdomWorstCase]), 2)),
                 // special use case that should trigger worst case scenario for react library
                 new Group("tree/[500]/[react_worst_case]", tree500, dupe(treeTransform(treeTransform(treeTransform(tree500, [removeFirst(1)]), [removeLast(1)]), [moveFromEndToStart(1)]), 2)),
+                // special use case that should trigger worst case scenario for virtual-dom library
+                new Group("tree/[500]/[virtual_dom_worst_case]", tree500, dupe(treeTransform(tree500, [moveFromStartToEnd(2)]), 2)),
             ];
         }
         return config;

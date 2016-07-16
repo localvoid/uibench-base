@@ -308,6 +308,10 @@ export function init(name: string, version: string): Config {
          [removeLast(1)]),
          [moveFromEndToStart(1)]),
         2)),
+
+      // special use case that should trigger worst case scenario for virtual-dom library
+      new Group("tree/[50]/[virtual_dom_worst_case]", tree50,
+        dupe(treeTransform(tree50, [moveFromStartToEnd(2)]), 2)),
     ];
   } else {
     let table100_4 = tableCreate(initialTable, 100, 4);
@@ -491,6 +495,10 @@ export function init(name: string, version: string): Config {
          [removeLast(1)]),
          [moveFromEndToStart(1)]),
         2)),
+
+      // special use case that should trigger worst case scenario for virtual-dom library
+      new Group("tree/[500]/[virtual_dom_worst_case]", tree500,
+        dupe(treeTransform(tree500, [moveFromStartToEnd(2)]), 2)),
     ];
   }
 
