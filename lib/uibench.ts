@@ -21,20 +21,24 @@ if (!window.performance.now) {
   };
 }
 
-export class Group {
+export class TestCase {
   name: string;
   from: AppState;
-  to: AppState[];
+  to: AppState;
 
-  constructor(name: string, from: AppState, to: AppState[]) {
+  constructor(name: string, from: AppState, to: AppState) {
     this.name = name;
     this.from = from;
     this.to = to;
   }
 }
 
+function testCase(name: string, from: AppState, to: AppState): TestCase {
+  return new TestCase(name, from, to);
+}
+
 export interface Config {
-  tests: Group[] | null;
+  tests: TestCase[] | null;
   iterations: number;
   name: string;
   version: string;
@@ -47,7 +51,7 @@ export interface Config {
 
 export const config = {
   tests: null,
-  iterations: 3,
+  iterations: 5,
   name: "unnamed",
   version: "0.0.0",
   report: false,
@@ -73,31 +77,11 @@ function parseQueryString(a: string[]): { [key: string]: string } {
   return b;
 }
 
-function animate(from: AppState, nth: number, t: number): AppState[] {
-  let c = from;
-  const r = [] as AppState[];
-
-  for (let i = 0; i < t; i++) {
-    c = animAdvanceEach(c, nth);
-    if (config.disableSCU) {
-      c = c.clone();
-    }
-    r.push(c);
-  }
-
-  return r;
-}
-
-function dupe(state: AppState, n: number): AppState[] {
+function scuClone(state: AppState): AppState {
   if (config.disableSCU) {
     state = state.clone();
   }
-  const r = [] as AppState[];
-  while (n > 0) {
-    r.push(state);
-    n--;
-  }
-  return r;
+  return state;
 }
 
 export function init(name: string, version: string): Config {
@@ -169,149 +153,146 @@ export function init(name: string, version: string): Config {
     }
 
     config.tests = [
-      new Group("table/[30,4]/render", initialTable, dupe(table30_4, 2)),
-      new Group("table/[15,4]/render", initialTable, dupe(table15_4, 2)),
-      new Group("table/[30,2]/render", initialTable, dupe(table30_2, 2)),
-      new Group("table/[15,2]/render", initialTable, dupe(table15_2, 2)),
+      testCase("table/[30,4]/render", initialTable, scuClone(table30_4)),
+      testCase("table/[15,4]/render", initialTable, scuClone(table15_4)),
+      testCase("table/[30,2]/render", initialTable, scuClone(table30_2)),
+      testCase("table/[15,2]/render", initialTable, scuClone(table15_2)),
 
-      new Group("table/[30,4]/removeAll", table30_4, dupe(initialTable, 2)),
-      new Group("table/[15,4]/removeAll", table15_4, dupe(initialTable, 2)),
-      new Group("table/[30,2]/removeAll", table30_2, dupe(initialTable, 2)),
-      new Group("table/[15,2]/removeAll", table15_2, dupe(initialTable, 2)),
+      testCase("table/[30,4]/removeAll", table30_4, scuClone(initialTable)),
+      testCase("table/[15,4]/removeAll", table15_4, scuClone(initialTable)),
+      testCase("table/[30,2]/removeAll", table30_2, scuClone(initialTable)),
+      testCase("table/[15,2]/removeAll", table15_2, scuClone(initialTable)),
 
-      new Group("table/[30,4]/sort/0", table30_4, dupe(tableSortBy(table30_4, 0), 2)),
-      new Group("table/[15,4]/sort/0", table15_4, dupe(tableSortBy(table15_4, 0), 2)),
-      new Group("table/[30,2]/sort/0", table30_2, dupe(tableSortBy(table30_2, 0), 2)),
-      new Group("table/[15,2]/sort/0", table15_2, dupe(tableSortBy(table15_2, 0), 2)),
+      testCase("table/[30,4]/sort/0", table30_4, scuClone(tableSortBy(table30_4, 0))),
+      testCase("table/[15,4]/sort/0", table15_4, scuClone(tableSortBy(table15_4, 0))),
+      testCase("table/[30,2]/sort/0", table30_2, scuClone(tableSortBy(table30_2, 0))),
+      testCase("table/[15,2]/sort/0", table15_2, scuClone(tableSortBy(table15_2, 0))),
 
-      new Group("table/[30,4]/sort/1", table30_4, dupe(tableSortBy(table30_4, 1), 2)),
-      new Group("table/[15,4]/sort/1", table15_4, dupe(tableSortBy(table15_4, 1), 2)),
-      new Group("table/[30,2]/sort/1", table30_2, dupe(tableSortBy(table30_2, 1), 2)),
-      new Group("table/[15,2]/sort/1", table15_2, dupe(tableSortBy(table15_2, 1), 2)),
+      testCase("table/[30,4]/sort/1", table30_4, scuClone(tableSortBy(table30_4, 1))),
+      testCase("table/[15,4]/sort/1", table15_4, scuClone(tableSortBy(table15_4, 1))),
+      testCase("table/[30,2]/sort/1", table30_2, scuClone(tableSortBy(table30_2, 1))),
+      testCase("table/[15,2]/sort/1", table15_2, scuClone(tableSortBy(table15_2, 1))),
 
-      new Group("table/[30,4]/filter/32", table30_4, dupe(tableFilterBy(table30_4, 32), 2)),
-      new Group("table/[15,4]/filter/32", table15_4, dupe(tableFilterBy(table15_4, 32), 2)),
-      new Group("table/[30,2]/filter/32", table30_2, dupe(tableFilterBy(table30_2, 32), 2)),
-      new Group("table/[15,2]/filter/32", table15_2, dupe(tableFilterBy(table15_2, 32), 2)),
+      testCase("table/[30,4]/filter/32", table30_4, scuClone(tableFilterBy(table30_4, 32))),
+      testCase("table/[15,4]/filter/32", table15_4, scuClone(tableFilterBy(table15_4, 32))),
+      testCase("table/[30,2]/filter/32", table30_2, scuClone(tableFilterBy(table30_2, 32))),
+      testCase("table/[15,2]/filter/32", table15_2, scuClone(tableFilterBy(table15_2, 32))),
 
-      new Group("table/[30,4]/filter/16", table30_4, dupe(tableFilterBy(table30_4, 16), 2)),
-      new Group("table/[15,4]/filter/16", table15_4, dupe(tableFilterBy(table15_4, 16), 2)),
-      new Group("table/[30,2]/filter/16", table30_2, dupe(tableFilterBy(table30_2, 16), 2)),
-      new Group("table/[15,2]/filter/16", table15_2, dupe(tableFilterBy(table15_2, 16), 2)),
+      testCase("table/[30,4]/filter/16", table30_4, scuClone(tableFilterBy(table30_4, 16))),
+      testCase("table/[15,4]/filter/16", table15_4, scuClone(tableFilterBy(table15_4, 16))),
+      testCase("table/[30,2]/filter/16", table30_2, scuClone(tableFilterBy(table30_2, 16))),
+      testCase("table/[15,2]/filter/16", table15_2, scuClone(tableFilterBy(table15_2, 16))),
 
-      new Group("table/[30,4]/filter/8", table30_4, dupe(tableFilterBy(table30_4, 8), 2)),
-      new Group("table/[15,4]/filter/8", table15_4, dupe(tableFilterBy(table15_4, 8), 2)),
-      new Group("table/[30,2]/filter/8", table30_2, dupe(tableFilterBy(table30_2, 8), 2)),
-      new Group("table/[15,2]/filter/8", table15_2, dupe(tableFilterBy(table15_2, 8), 2)),
+      testCase("table/[30,4]/filter/8", table30_4, scuClone(tableFilterBy(table30_4, 8))),
+      testCase("table/[15,4]/filter/8", table15_4, scuClone(tableFilterBy(table15_4, 8))),
+      testCase("table/[30,2]/filter/8", table30_2, scuClone(tableFilterBy(table30_2, 8))),
+      testCase("table/[15,2]/filter/8", table15_2, scuClone(tableFilterBy(table15_2, 8))),
 
-      new Group("table/[30,4]/filter/4", table30_4, dupe(tableFilterBy(table30_4, 4), 2)),
-      new Group("table/[15,4]/filter/4", table15_4, dupe(tableFilterBy(table15_4, 4), 2)),
-      new Group("table/[30,2]/filter/4", table30_2, dupe(tableFilterBy(table30_2, 4), 2)),
-      new Group("table/[15,2]/filter/4", table15_2, dupe(tableFilterBy(table15_2, 4), 2)),
+      testCase("table/[30,4]/filter/4", table30_4, scuClone(tableFilterBy(table30_4, 4))),
+      testCase("table/[15,4]/filter/4", table15_4, scuClone(tableFilterBy(table15_4, 4))),
+      testCase("table/[30,2]/filter/4", table30_2, scuClone(tableFilterBy(table30_2, 4))),
+      testCase("table/[15,2]/filter/4", table15_2, scuClone(tableFilterBy(table15_2, 4))),
 
-      new Group("table/[30,4]/filter/2", table30_4, dupe(tableFilterBy(table30_4, 2), 2)),
-      new Group("table/[15,4]/filter/2",  table15_4,  dupe(tableFilterBy(table15_4, 2), 2)),
-      new Group("table/[30,2]/filter/2", table30_2, dupe(tableFilterBy(table30_2, 2), 2)),
-      new Group("table/[15,2]/filter/2",  table15_2,  dupe(tableFilterBy(table15_2, 2), 2)),
+      testCase("table/[30,4]/filter/2", table30_4, scuClone(tableFilterBy(table30_4, 2))),
+      testCase("table/[15,4]/filter/2",  table15_4,  scuClone(tableFilterBy(table15_4, 2))),
+      testCase("table/[30,2]/filter/2", table30_2, scuClone(tableFilterBy(table30_2, 2))),
+      testCase("table/[15,2]/filter/2",  table15_2,  scuClone(tableFilterBy(table15_2, 2))),
 
-      new Group("table/[30,4]/activate/32", table30_4, dupe(tableActivateEach(table30_4, 32), 2)),
-      new Group("table/[15,4]/activate/32", table15_4, dupe(tableActivateEach(table15_4, 32), 2)),
-      new Group("table/[30,2]/activate/32", table30_2, dupe(tableActivateEach(table30_2, 32), 2)),
-      new Group("table/[15,2]/activate/32", table15_2, dupe(tableActivateEach(table15_2, 32), 2)),
+      testCase("table/[30,4]/activate/32", table30_4, scuClone(tableActivateEach(table30_4, 32))),
+      testCase("table/[15,4]/activate/32", table15_4, scuClone(tableActivateEach(table15_4, 32))),
+      testCase("table/[30,2]/activate/32", table30_2, scuClone(tableActivateEach(table30_2, 32))),
+      testCase("table/[15,2]/activate/32", table15_2, scuClone(tableActivateEach(table15_2, 32))),
 
-      new Group("table/[30,4]/activate/16", table30_4, dupe(tableActivateEach(table30_4, 16), 2)),
-      new Group("table/[15,4]/activate/16", table15_4, dupe(tableActivateEach(table15_4, 16), 2)),
-      new Group("table/[30,2]/activate/16", table30_2, dupe(tableActivateEach(table30_2, 16), 2)),
-      new Group("table/[15,2]/activate/16", table15_2, dupe(tableActivateEach(table15_2, 16), 2)),
+      testCase("table/[30,4]/activate/16", table30_4, scuClone(tableActivateEach(table30_4, 16))),
+      testCase("table/[15,4]/activate/16", table15_4, scuClone(tableActivateEach(table15_4, 16))),
+      testCase("table/[30,2]/activate/16", table30_2, scuClone(tableActivateEach(table30_2, 16))),
+      testCase("table/[15,2]/activate/16", table15_2, scuClone(tableActivateEach(table15_2, 16))),
 
-      new Group("table/[30,4]/activate/8", table30_4, dupe(tableActivateEach(table30_4, 8), 2)),
-      new Group("table/[15,4]/activate/8", table15_4, dupe(tableActivateEach(table15_4, 8), 2)),
-      new Group("table/[30,2]/activate/8", table30_2, dupe(tableActivateEach(table30_2, 8), 2)),
-      new Group("table/[15,2]/activate/8", table15_2, dupe(tableActivateEach(table15_2, 8), 2)),
+      testCase("table/[30,4]/activate/8", table30_4, scuClone(tableActivateEach(table30_4, 8))),
+      testCase("table/[15,4]/activate/8", table15_4, scuClone(tableActivateEach(table15_4, 8))),
+      testCase("table/[30,2]/activate/8", table30_2, scuClone(tableActivateEach(table30_2, 8))),
+      testCase("table/[15,2]/activate/8", table15_2, scuClone(tableActivateEach(table15_2, 8))),
 
-      new Group("table/[30,4]/activate/4", table30_4, dupe(tableActivateEach(table30_4, 4), 2)),
-      new Group("table/[15,4]/activate/4", table15_4, dupe(tableActivateEach(table15_4, 4), 2)),
-      new Group("table/[30,2]/activate/4", table30_2, dupe(tableActivateEach(table30_2, 4), 2)),
-      new Group("table/[15,2]/activate/4", table15_2, dupe(tableActivateEach(table15_2, 4), 2)),
+      testCase("table/[30,4]/activate/4", table30_4, scuClone(tableActivateEach(table30_4, 4))),
+      testCase("table/[15,4]/activate/4", table15_4, scuClone(tableActivateEach(table15_4, 4))),
+      testCase("table/[30,2]/activate/4", table30_2, scuClone(tableActivateEach(table30_2, 4))),
+      testCase("table/[15,2]/activate/4", table15_2, scuClone(tableActivateEach(table15_2, 4))),
 
-      new Group("table/[30,4]/activate/2", table30_4, dupe(tableActivateEach(table30_4, 2), 2)),
-      new Group("table/[15,4]/activate/2", table15_4, dupe(tableActivateEach(table15_4, 2), 2)),
-      new Group("table/[30,2]/activate/2", table30_2, dupe(tableActivateEach(table30_2, 2), 2)),
-      new Group("table/[15,2]/activate/2", table15_2, dupe(tableActivateEach(table15_2, 2), 2)),
+      testCase("table/[30,4]/activate/2", table30_4, scuClone(tableActivateEach(table30_4, 2))),
+      testCase("table/[15,4]/activate/2", table15_4, scuClone(tableActivateEach(table15_4, 2))),
+      testCase("table/[30,2]/activate/2", table30_2, scuClone(tableActivateEach(table30_2, 2))),
+      testCase("table/[15,2]/activate/2", table15_2, scuClone(tableActivateEach(table15_2, 2))),
 
-      new Group("table/[30,4]/activate/1", table30_4, dupe(tableActivateEach(table30_4, 1), 2)),
-      new Group("table/[15,4]/activate/1", table15_4, dupe(tableActivateEach(table15_4, 1), 2)),
-      new Group("table/[30,2]/activate/1", table30_2, dupe(tableActivateEach(table30_2, 1), 2)),
-      new Group("table/[15,2]/activate/1", table15_2, dupe(tableActivateEach(table15_2, 1), 2)),
+      testCase("table/[30,4]/activate/1", table30_4, scuClone(tableActivateEach(table30_4, 1))),
+      testCase("table/[15,4]/activate/1", table15_4, scuClone(tableActivateEach(table15_4, 1))),
+      testCase("table/[30,2]/activate/1", table30_2, scuClone(tableActivateEach(table30_2, 1))),
+      testCase("table/[15,2]/activate/1", table15_2, scuClone(tableActivateEach(table15_2, 1))),
 
-      new Group("anim/30/8", initialAnim, animate(initialAnim, 8, 2)),
-      new Group("anim/30/4", initialAnim, animate(initialAnim, 4, 2)),
-      new Group("anim/30/2", initialAnim, animate(initialAnim, 2, 2)),
-      new Group("anim/30/1", initialAnim, animate(initialAnim, 1, 2)),
+      testCase("anim/30/8", initialAnim, scuClone(animAdvanceEach(initialAnim, 8))),
+      testCase("anim/30/4", initialAnim, scuClone(animAdvanceEach(initialAnim, 4))),
+      testCase("anim/30/2", initialAnim, scuClone(animAdvanceEach(initialAnim, 2))),
+      testCase("anim/30/1", initialAnim, scuClone(animAdvanceEach(initialAnim, 1))),
 
-      new Group("tree/[50]/render", initialTree, dupe(tree50, 2)),
-      new Group("tree/[5,10]/render", initialTree, dupe(tree5_10, 2)),
-      new Group("tree/[10,5]/render", initialTree, dupe(tree10_5, 2)),
+      testCase("tree/[50]/render", initialTree, scuClone(tree50)),
+      testCase("tree/[5,10]/render", initialTree, scuClone(tree5_10)),
+      testCase("tree/[10,5]/render", initialTree, scuClone(tree10_5)),
 
-      new Group("tree/[50]/removeAll", tree50, dupe(initialTree, 2)),
-      new Group("tree/[5,10]/removeAll", tree5_10, dupe(initialTree, 2)),
-      new Group("tree/[10,5]/removeAll", tree10_5, dupe(initialTree, 2)),
+      testCase("tree/[50]/removeAll", tree50, scuClone(initialTree)),
+      testCase("tree/[5,10]/removeAll", tree5_10, scuClone(initialTree)),
+      testCase("tree/[10,5]/removeAll", tree10_5, scuClone(initialTree)),
 
-      new Group("tree/[50]/[reverse]", tree50, dupe(treeTransform(tree50, [reverse]), 2)),
-      new Group("tree/[5,10]/[reverse]", tree5_10, dupe(treeTransform(tree5_10, [reverse]), 2)),
-      new Group("tree/[10,5]/[reverse]", tree10_5, dupe(treeTransform(tree10_5, [reverse]), 2)),
+      testCase("tree/[50]/[reverse]", tree50, scuClone(treeTransform(tree50, [reverse]))),
+      testCase("tree/[5,10]/[reverse]", tree5_10, scuClone(treeTransform(tree5_10, [reverse]))),
+      testCase("tree/[10,5]/[reverse]", tree10_5, scuClone(treeTransform(tree10_5, [reverse]))),
 
-      new Group("tree/[50]/[insertFirst(1)]", tree50, dupe(treeTransform(tree50, [insertFirst(1)]), 2)),
-      new Group("tree/[5,10]/[insertFirst(1)]", tree5_10, dupe(treeTransform(tree5_10, [insertFirst(1)]), 2)),
-      new Group("tree/[10,5]/[insertFirst(1)]", tree10_5, dupe(treeTransform(tree10_5, [insertFirst(1)]), 2)),
+      testCase("tree/[50]/[insertFirst(1)]", tree50, scuClone(treeTransform(tree50, [insertFirst(1)]))),
+      testCase("tree/[5,10]/[insertFirst(1)]", tree5_10, scuClone(treeTransform(tree5_10, [insertFirst(1)]))),
+      testCase("tree/[10,5]/[insertFirst(1)]", tree10_5, scuClone(treeTransform(tree10_5, [insertFirst(1)]))),
 
-      new Group("tree/[50]/[insertLast(1)]", tree50, dupe(treeTransform(tree50, [insertLast(1)]), 2)),
-      new Group("tree/[5,10]/[insertLast(1)]", tree5_10, dupe(treeTransform(tree5_10, [insertLast(1)]), 2)),
-      new Group("tree/[10,5]/[insertLast(1)]", tree10_5, dupe(treeTransform(tree10_5, [insertLast(1)]), 2)),
+      testCase("tree/[50]/[insertLast(1)]", tree50, scuClone(treeTransform(tree50, [insertLast(1)]))),
+      testCase("tree/[5,10]/[insertLast(1)]", tree5_10, scuClone(treeTransform(tree5_10, [insertLast(1)]))),
+      testCase("tree/[10,5]/[insertLast(1)]", tree10_5, scuClone(treeTransform(tree10_5, [insertLast(1)]))),
 
-      new Group("tree/[50]/[removeFirst(1)]", tree50, dupe(treeTransform(tree50, [removeFirst(1)]), 2)),
-      new Group("tree/[5,10]/[removeFirst(1)]", tree5_10, dupe(treeTransform(tree5_10, [removeFirst(1)]), 2)),
-      new Group("tree/[10,5]/[removeFirst(1)]", tree10_5, dupe(treeTransform(tree10_5, [removeFirst(1)]), 2)),
+      testCase("tree/[50]/[removeFirst(1)]", tree50, scuClone(treeTransform(tree50, [removeFirst(1)]))),
+      testCase("tree/[5,10]/[removeFirst(1)]", tree5_10, scuClone(treeTransform(tree5_10, [removeFirst(1)]))),
+      testCase("tree/[10,5]/[removeFirst(1)]", tree10_5, scuClone(treeTransform(tree10_5, [removeFirst(1)]))),
 
-      new Group("tree/[50]/[removeLast(1)]", tree50, dupe(treeTransform(tree50, [removeLast(1)]), 2)),
-      new Group("tree/[5,10]/[removeLast(1)]", tree5_10, dupe(treeTransform(tree5_10, [removeLast(1)]), 2)),
-      new Group("tree/[10,5]/[removeLast(1)]", tree10_5, dupe(treeTransform(tree10_5, [removeLast(1)]), 2)),
+      testCase("tree/[50]/[removeLast(1)]", tree50, scuClone(treeTransform(tree50, [removeLast(1)]))),
+      testCase("tree/[5,10]/[removeLast(1)]", tree5_10, scuClone(treeTransform(tree5_10, [removeLast(1)]))),
+      testCase("tree/[10,5]/[removeLast(1)]", tree10_5, scuClone(treeTransform(tree10_5, [removeLast(1)]))),
 
-      new Group("tree/[50]/[moveFromEndToStart(1)]", tree50,
-        dupe(treeTransform(tree50, [moveFromEndToStart(1)]), 2)),
-      new Group("tree/[5,10]/[moveFromEndToStart(1)]", tree5_10,
-        dupe(treeTransform(tree5_10, [moveFromEndToStart(1)]), 2)),
-      new Group("tree/[10,5]/[moveFromEndToStart(1)]", tree10_5,
-        dupe(treeTransform(tree10_5, [moveFromEndToStart(1)]), 2)),
+      testCase("tree/[50]/[moveFromEndToStart(1)]", tree50,
+        scuClone(treeTransform(tree50, [moveFromEndToStart(1)]))),
+      testCase("tree/[5,10]/[moveFromEndToStart(1)]", tree5_10,
+        scuClone(treeTransform(tree5_10, [moveFromEndToStart(1)]))),
+      testCase("tree/[10,5]/[moveFromEndToStart(1)]", tree10_5,
+        scuClone(treeTransform(tree10_5, [moveFromEndToStart(1)]))),
 
-      new Group("tree/[50]/[moveFromStartToEnd(1)]", tree50,
-        dupe(treeTransform(tree50, [moveFromStartToEnd(1)]), 2)),
-      new Group("tree/[5,10]/[moveFromStartToEnd(1)]", tree5_10,
-        dupe(treeTransform(tree5_10, [moveFromStartToEnd(1)]), 2)),
-      new Group("tree/[10,5]/[moveFromStartToEnd(1)]", tree10_5,
-        dupe(treeTransform(tree10_5, [moveFromStartToEnd(1)]), 2)),
+      testCase("tree/[50]/[moveFromStartToEnd(1)]", tree50,
+        scuClone(treeTransform(tree50, [moveFromStartToEnd(1)]))),
+      testCase("tree/[5,10]/[moveFromStartToEnd(1)]", tree5_10,
+        scuClone(treeTransform(tree5_10, [moveFromStartToEnd(1)]))),
+      testCase("tree/[10,5]/[moveFromStartToEnd(1)]", tree10_5,
+        scuClone(treeTransform(tree10_5, [moveFromStartToEnd(1)]))),
 
       // special use case that should trigger worst case scenario for kivi library
-      new Group("tree/[50]/[kivi_worst_case]", tree50, dupe(
-        treeTransform(treeTransform(treeTransform(tree50, [removeFirst(1)]), [removeLast(1)]), [reverse]),
-        2)),
+      testCase("tree/[50]/[kivi_worst_case]", tree50, scuClone(
+        treeTransform(treeTransform(treeTransform(tree50, [removeFirst(1)]), [removeLast(1)]), [reverse]))),
 
       // special use case that should trigger worst case scenario for snabbdom library
-      new Group("tree/[50]/[snabbdom_worst_case]", tree50, dupe(
-        treeTransform(tree50, [snabbdomWorstCase]),
-        2)),
+      testCase("tree/[50]/[snabbdom_worst_case]", tree50, scuClone(
+        treeTransform(tree50, [snabbdomWorstCase]))),
 
       // special use case that should trigger worst case scenario for react library
-      new Group("tree/[50]/[react_worst_case]", tree50, dupe(
+      testCase("tree/[50]/[react_worst_case]", tree50, scuClone(
         treeTransform(treeTransform(treeTransform(tree50,
          [removeFirst(1)]),
          [removeLast(1)]),
-         [moveFromEndToStart(1)]),
-        2)),
+         [moveFromEndToStart(1)]))),
 
       // special use case that should trigger worst case scenario for virtual-dom library
-      new Group("tree/[50]/[virtual_dom_worst_case]", tree50,
-        dupe(treeTransform(tree50, [moveFromStartToEnd(2)]), 2)),
+      testCase("tree/[50]/[virtual_dom_worst_case]", tree50,
+        scuClone(treeTransform(tree50, [moveFromStartToEnd(2)]))),
     ];
   } else {
     let table100_4 = tableCreate(initialTable, 100, 4);
@@ -337,168 +318,165 @@ export function init(name: string, version: string): Config {
     }
 
     config.tests = [
-      new Group("table/[100,4]/render", initialTable, dupe(table100_4, 2)),
-      new Group("table/[50,4]/render", initialTable, dupe(table50_4, 2)),
-      new Group("table/[100,2]/render", initialTable, dupe(table100_2, 2)),
-      new Group("table/[50,2]/render", initialTable, dupe(table50_2, 2)),
+      testCase("table/[100,4]/render", initialTable, scuClone(table100_4)),
+      testCase("table/[50,4]/render", initialTable, scuClone(table50_4)),
+      testCase("table/[100,2]/render", initialTable, scuClone(table100_2)),
+      testCase("table/[50,2]/render", initialTable, scuClone(table50_2)),
 
-      new Group("table/[100,4]/removeAll", table100_4, dupe(initialTable, 2)),
-      new Group("table/[50,4]/removeAll", table50_4, dupe(initialTable, 2)),
-      new Group("table/[100,2]/removeAll", table100_2, dupe(initialTable, 2)),
-      new Group("table/[50,2]/removeAll", table50_2, dupe(initialTable, 2)),
+      testCase("table/[100,4]/removeAll", table100_4, scuClone(initialTable)),
+      testCase("table/[50,4]/removeAll", table50_4, scuClone(initialTable)),
+      testCase("table/[100,2]/removeAll", table100_2, scuClone(initialTable)),
+      testCase("table/[50,2]/removeAll", table50_2, scuClone(initialTable)),
 
-      new Group("table/[100,4]/sort/0", table100_4, dupe(tableSortBy(table100_4, 0), 2)),
-      new Group("table/[50,4]/sort/0", table50_4, dupe(tableSortBy(table50_4, 0), 2)),
-      new Group("table/[100,2]/sort/0", table100_2, dupe(tableSortBy(table100_2, 0), 2)),
-      new Group("table/[50,2]/sort/0", table50_2, dupe(tableSortBy(table50_2, 0), 2)),
+      testCase("table/[100,4]/sort/0", table100_4, scuClone(tableSortBy(table100_4, 0))),
+      testCase("table/[50,4]/sort/0", table50_4, scuClone(tableSortBy(table50_4, 0))),
+      testCase("table/[100,2]/sort/0", table100_2, scuClone(tableSortBy(table100_2, 0))),
+      testCase("table/[50,2]/sort/0", table50_2, scuClone(tableSortBy(table50_2, 0))),
 
-      new Group("table/[100,4]/sort/1", table100_4, dupe(tableSortBy(table100_4, 1), 2)),
-      new Group("table/[50,4]/sort/1", table50_4, dupe(tableSortBy(table50_4, 1), 2)),
-      new Group("table/[100,2]/sort/1", table100_2, dupe(tableSortBy(table100_2, 1), 2)),
-      new Group("table/[50,2]/sort/1", table50_2, dupe(tableSortBy(table50_2, 1), 2)),
+      testCase("table/[100,4]/sort/1", table100_4, scuClone(tableSortBy(table100_4, 1))),
+      testCase("table/[50,4]/sort/1", table50_4, scuClone(tableSortBy(table50_4, 1))),
+      testCase("table/[100,2]/sort/1", table100_2, scuClone(tableSortBy(table100_2, 1))),
+      testCase("table/[50,2]/sort/1", table50_2, scuClone(tableSortBy(table50_2, 1))),
 
-      new Group("table/[100,4]/sort/2", table100_4, dupe(tableSortBy(table100_4, 2), 2)),
-      new Group("table/[50,4]/sort/2", table50_4, dupe(tableSortBy(table50_4, 2), 2)),
+      testCase("table/[100,4]/sort/2", table100_4, scuClone(tableSortBy(table100_4, 2))),
+      testCase("table/[50,4]/sort/2", table50_4, scuClone(tableSortBy(table50_4, 2))),
 
-      new Group("table/[100,4]/sort/3", table100_4, dupe(tableSortBy(table100_4, 3), 2)),
-      new Group("table/[50,4]/sort/3", table50_4, dupe(tableSortBy(table50_4, 3), 2)),
+      testCase("table/[100,4]/sort/3", table100_4, scuClone(tableSortBy(table100_4, 3))),
+      testCase("table/[50,4]/sort/3", table50_4, scuClone(tableSortBy(table50_4, 3))),
 
-      new Group("table/[100,4]/filter/32", table100_4, dupe(tableFilterBy(table100_4, 32), 2)),
-      new Group("table/[50,4]/filter/32", table50_4, dupe(tableFilterBy(table50_4, 32), 2)),
-      new Group("table/[100,2]/filter/32", table100_2, dupe(tableFilterBy(table100_2, 32), 2)),
-      new Group("table/[50,2]/filter/32", table50_2, dupe(tableFilterBy(table50_2, 32), 2)),
+      testCase("table/[100,4]/filter/32", table100_4, scuClone(tableFilterBy(table100_4, 32))),
+      testCase("table/[50,4]/filter/32", table50_4, scuClone(tableFilterBy(table50_4, 32))),
+      testCase("table/[100,2]/filter/32", table100_2, scuClone(tableFilterBy(table100_2, 32))),
+      testCase("table/[50,2]/filter/32", table50_2, scuClone(tableFilterBy(table50_2, 32))),
 
-      new Group("table/[100,4]/filter/16", table100_4, dupe(tableFilterBy(table100_4, 16), 2)),
-      new Group("table/[50,4]/filter/16", table50_4, dupe(tableFilterBy(table50_4, 16), 2)),
-      new Group("table/[100,2]/filter/16", table100_2, dupe(tableFilterBy(table100_2, 16), 2)),
-      new Group("table/[50,2]/filter/16", table50_2, dupe(tableFilterBy(table50_2, 16), 2)),
+      testCase("table/[100,4]/filter/16", table100_4, scuClone(tableFilterBy(table100_4, 16))),
+      testCase("table/[50,4]/filter/16", table50_4, scuClone(tableFilterBy(table50_4, 16))),
+      testCase("table/[100,2]/filter/16", table100_2, scuClone(tableFilterBy(table100_2, 16))),
+      testCase("table/[50,2]/filter/16", table50_2, scuClone(tableFilterBy(table50_2, 16))),
 
-      new Group("table/[100,4]/filter/8", table100_4, dupe(tableFilterBy(table100_4, 8), 2)),
-      new Group("table/[50,4]/filter/8", table50_4, dupe(tableFilterBy(table50_4, 8), 2)),
-      new Group("table/[100,2]/filter/8", table100_2, dupe(tableFilterBy(table100_2, 8), 2)),
-      new Group("table/[50,2]/filter/8", table50_2, dupe(tableFilterBy(table50_2, 8), 2)),
+      testCase("table/[100,4]/filter/8", table100_4, scuClone(tableFilterBy(table100_4, 8))),
+      testCase("table/[50,4]/filter/8", table50_4, scuClone(tableFilterBy(table50_4, 8))),
+      testCase("table/[100,2]/filter/8", table100_2, scuClone(tableFilterBy(table100_2, 8))),
+      testCase("table/[50,2]/filter/8", table50_2, scuClone(tableFilterBy(table50_2, 8))),
 
-      new Group("table/[100,4]/filter/4", table100_4, dupe(tableFilterBy(table100_4, 4), 2)),
-      new Group("table/[50,4]/filter/4", table50_4, dupe(tableFilterBy(table50_4, 4), 2)),
-      new Group("table/[100,2]/filter/4", table100_2, dupe(tableFilterBy(table100_2, 4), 2)),
-      new Group("table/[50,2]/filter/4", table50_2, dupe(tableFilterBy(table50_2, 4), 2)),
+      testCase("table/[100,4]/filter/4", table100_4, scuClone(tableFilterBy(table100_4, 4))),
+      testCase("table/[50,4]/filter/4", table50_4, scuClone(tableFilterBy(table50_4, 4))),
+      testCase("table/[100,2]/filter/4", table100_2, scuClone(tableFilterBy(table100_2, 4))),
+      testCase("table/[50,2]/filter/4", table50_2, scuClone(tableFilterBy(table50_2, 4))),
 
-      new Group("table/[100,4]/filter/2", table100_4, dupe(tableFilterBy(table100_4, 2), 2)),
-      new Group("table/[50,4]/filter/2",  table50_4,  dupe(tableFilterBy(table50_4, 2), 2)),
-      new Group("table/[100,2]/filter/2", table100_2, dupe(tableFilterBy(table100_2, 2), 2)),
-      new Group("table/[50,2]/filter/2",  table50_2,  dupe(tableFilterBy(table50_2, 2), 2)),
+      testCase("table/[100,4]/filter/2", table100_4, scuClone(tableFilterBy(table100_4, 2))),
+      testCase("table/[50,4]/filter/2",  table50_4,  scuClone(tableFilterBy(table50_4, 2))),
+      testCase("table/[100,2]/filter/2", table100_2, scuClone(tableFilterBy(table100_2, 2))),
+      testCase("table/[50,2]/filter/2",  table50_2,  scuClone(tableFilterBy(table50_2, 2))),
 
-      new Group("table/[100,4]/activate/32", table100_4, dupe(tableActivateEach(table100_4, 32), 2)),
-      new Group("table/[50,4]/activate/32", table50_4, dupe(tableActivateEach(table50_4, 32), 2)),
-      new Group("table/[100,2]/activate/32", table100_2, dupe(tableActivateEach(table100_2, 32), 2)),
-      new Group("table/[50,2]/activate/32", table50_2, dupe(tableActivateEach(table50_2, 32), 2)),
+      testCase("table/[100,4]/activate/32", table100_4, scuClone(tableActivateEach(table100_4, 32))),
+      testCase("table/[50,4]/activate/32", table50_4, scuClone(tableActivateEach(table50_4, 32))),
+      testCase("table/[100,2]/activate/32", table100_2, scuClone(tableActivateEach(table100_2, 32))),
+      testCase("table/[50,2]/activate/32", table50_2, scuClone(tableActivateEach(table50_2, 32))),
 
-      new Group("table/[100,4]/activate/16", table100_4, dupe(tableActivateEach(table100_4, 16), 2)),
-      new Group("table/[50,4]/activate/16", table50_4, dupe(tableActivateEach(table50_4, 16), 2)),
-      new Group("table/[100,2]/activate/16", table100_2, dupe(tableActivateEach(table100_2, 16), 2)),
-      new Group("table/[50,2]/activate/16", table50_2, dupe(tableActivateEach(table50_2, 16), 2)),
+      testCase("table/[100,4]/activate/16", table100_4, scuClone(tableActivateEach(table100_4, 16))),
+      testCase("table/[50,4]/activate/16", table50_4, scuClone(tableActivateEach(table50_4, 16))),
+      testCase("table/[100,2]/activate/16", table100_2, scuClone(tableActivateEach(table100_2, 16))),
+      testCase("table/[50,2]/activate/16", table50_2, scuClone(tableActivateEach(table50_2, 16))),
 
-      new Group("table/[100,4]/activate/8", table100_4, dupe(tableActivateEach(table100_4, 8), 2)),
-      new Group("table/[50,4]/activate/8", table50_4, dupe(tableActivateEach(table50_4, 8), 2)),
-      new Group("table/[100,2]/activate/8", table100_2, dupe(tableActivateEach(table100_2, 8), 2)),
-      new Group("table/[50,2]/activate/8", table50_2, dupe(tableActivateEach(table50_2, 8), 2)),
+      testCase("table/[100,4]/activate/8", table100_4, scuClone(tableActivateEach(table100_4, 8))),
+      testCase("table/[50,4]/activate/8", table50_4, scuClone(tableActivateEach(table50_4, 8))),
+      testCase("table/[100,2]/activate/8", table100_2, scuClone(tableActivateEach(table100_2, 8))),
+      testCase("table/[50,2]/activate/8", table50_2, scuClone(tableActivateEach(table50_2, 8))),
 
-      new Group("table/[100,4]/activate/4", table100_4, dupe(tableActivateEach(table100_4, 4), 2)),
-      new Group("table/[50,4]/activate/4", table50_4, dupe(tableActivateEach(table50_4, 4), 2)),
-      new Group("table/[100,2]/activate/4", table100_2, dupe(tableActivateEach(table100_2, 4), 2)),
-      new Group("table/[50,2]/activate/4", table50_2, dupe(tableActivateEach(table50_2, 4), 2)),
+      testCase("table/[100,4]/activate/4", table100_4, scuClone(tableActivateEach(table100_4, 4))),
+      testCase("table/[50,4]/activate/4", table50_4, scuClone(tableActivateEach(table50_4, 4))),
+      testCase("table/[100,2]/activate/4", table100_2, scuClone(tableActivateEach(table100_2, 4))),
+      testCase("table/[50,2]/activate/4", table50_2, scuClone(tableActivateEach(table50_2, 4))),
 
-      new Group("table/[100,4]/activate/2", table100_4, dupe(tableActivateEach(table100_4, 2), 2)),
-      new Group("table/[50,4]/activate/2", table50_4, dupe(tableActivateEach(table50_4, 2), 2)),
-      new Group("table/[100,2]/activate/2", table100_2, dupe(tableActivateEach(table100_2, 2), 2)),
-      new Group("table/[50,2]/activate/2", table50_2, dupe(tableActivateEach(table50_2, 2), 2)),
+      testCase("table/[100,4]/activate/2", table100_4, scuClone(tableActivateEach(table100_4, 2))),
+      testCase("table/[50,4]/activate/2", table50_4, scuClone(tableActivateEach(table50_4, 2))),
+      testCase("table/[100,2]/activate/2", table100_2, scuClone(tableActivateEach(table100_2, 2))),
+      testCase("table/[50,2]/activate/2", table50_2, scuClone(tableActivateEach(table50_2, 2))),
 
-      new Group("table/[100,4]/activate/1", table100_4, dupe(tableActivateEach(table100_4, 1), 2)),
-      new Group("table/[50,4]/activate/1", table50_4, dupe(tableActivateEach(table50_4, 1), 2)),
-      new Group("table/[100,2]/activate/1", table100_2, dupe(tableActivateEach(table100_2, 1), 2)),
-      new Group("table/[50,2]/activate/1", table50_2, dupe(tableActivateEach(table50_2, 1), 2)),
+      testCase("table/[100,4]/activate/1", table100_4, scuClone(tableActivateEach(table100_4, 1))),
+      testCase("table/[50,4]/activate/1", table50_4, scuClone(tableActivateEach(table50_4, 1))),
+      testCase("table/[100,2]/activate/1", table100_2, scuClone(tableActivateEach(table100_2, 1))),
+      testCase("table/[50,2]/activate/1", table50_2, scuClone(tableActivateEach(table50_2, 1))),
 
-      new Group("anim/100/32", initialAnim, animate(initialAnim, 32, 2)),
-      new Group("anim/100/16", initialAnim, animate(initialAnim, 16, 2)),
-      new Group("anim/100/8", initialAnim, animate(initialAnim, 8, 2)),
-      new Group("anim/100/4", initialAnim, animate(initialAnim, 4, 2)),
-      new Group("anim/100/2", initialAnim, animate(initialAnim, 2, 2)),
-      new Group("anim/100/1", initialAnim, animate(initialAnim, 1, 2)),
+      testCase("anim/100/32", initialAnim, scuClone(animAdvanceEach(initialAnim, 32))),
+      testCase("anim/100/16", initialAnim, scuClone(animAdvanceEach(initialAnim, 16))),
+      testCase("anim/100/8", initialAnim, scuClone(animAdvanceEach(initialAnim, 8))),
+      testCase("anim/100/4", initialAnim, scuClone(animAdvanceEach(initialAnim, 4))),
+      testCase("anim/100/2", initialAnim, scuClone(animAdvanceEach(initialAnim, 2))),
+      testCase("anim/100/1", initialAnim, scuClone(animAdvanceEach(initialAnim, 1))),
 
-      new Group("tree/[500]/render", initialTree, dupe(tree500, 2)),
-      new Group("tree/[50,10]/render", initialTree, dupe(tree50_10, 2)),
-      new Group("tree/[10,50]/render", initialTree, dupe(tree10_50, 2)),
-      new Group("tree/[5,100]/render", initialTree, dupe(tree5_100, 2)),
+      testCase("tree/[500]/render", initialTree, scuClone(tree500)),
+      testCase("tree/[50,10]/render", initialTree, scuClone(tree50_10)),
+      testCase("tree/[10,50]/render", initialTree, scuClone(tree10_50)),
+      testCase("tree/[5,100]/render", initialTree, scuClone(tree5_100)),
 
-      new Group("tree/[500]/removeAll", tree500, dupe(initialTree, 2)),
-      new Group("tree/[50,10]/removeAll", tree50_10, dupe(initialTree, 2)),
-      new Group("tree/[10,50]/removeAll", tree10_50, dupe(initialTree, 2)),
-      new Group("tree/[5,100]/removeAll", tree5_100, dupe(initialTree, 2)),
+      testCase("tree/[500]/removeAll", tree500, scuClone(initialTree)),
+      testCase("tree/[50,10]/removeAll", tree50_10, scuClone(initialTree)),
+      testCase("tree/[10,50]/removeAll", tree10_50, scuClone(initialTree)),
+      testCase("tree/[5,100]/removeAll", tree5_100, scuClone(initialTree)),
 
-      new Group("tree/[500]/[reverse]", tree500, dupe(treeTransform(tree500, [reverse]), 2)),
-      new Group("tree/[50,10]/[reverse]", tree50_10, dupe(treeTransform(tree50_10, [reverse]), 2)),
-      new Group("tree/[10,50]/[reverse]", tree10_50, dupe(treeTransform(tree10_50, [reverse]), 2)),
-      new Group("tree/[5,100]/[reverse]", tree5_100, dupe(treeTransform(tree5_100, [reverse]), 2)),
+      testCase("tree/[500]/[reverse]", tree500, scuClone(treeTransform(tree500, [reverse]))),
+      testCase("tree/[50,10]/[reverse]", tree50_10, scuClone(treeTransform(tree50_10, [reverse]))),
+      testCase("tree/[10,50]/[reverse]", tree10_50, scuClone(treeTransform(tree10_50, [reverse]))),
+      testCase("tree/[5,100]/[reverse]", tree5_100, scuClone(treeTransform(tree5_100, [reverse]))),
 
-      new Group("tree/[500]/[insertFirst(1)]", tree500, dupe(treeTransform(tree500, [insertFirst(1)]), 2)),
-      new Group("tree/[50,10]/[insertFirst(1)]", tree50_10, dupe(treeTransform(tree50_10, [insertFirst(1)]), 2)),
-      new Group("tree/[10,50]/[insertFirst(1)]", tree10_50, dupe(treeTransform(tree10_50, [insertFirst(1)]), 2)),
-      new Group("tree/[5,100]/[insertFirst(1)]", tree5_100, dupe(treeTransform(tree5_100, [insertFirst(1)]), 2)),
+      testCase("tree/[500]/[insertFirst(1)]", tree500, scuClone(treeTransform(tree500, [insertFirst(1)]))),
+      testCase("tree/[50,10]/[insertFirst(1)]", tree50_10, scuClone(treeTransform(tree50_10, [insertFirst(1)]))),
+      testCase("tree/[10,50]/[insertFirst(1)]", tree10_50, scuClone(treeTransform(tree10_50, [insertFirst(1)]))),
+      testCase("tree/[5,100]/[insertFirst(1)]", tree5_100, scuClone(treeTransform(tree5_100, [insertFirst(1)]))),
 
-      new Group("tree/[500]/[insertLast(1)]", tree500, dupe(treeTransform(tree500, [insertLast(1)]), 2)),
-      new Group("tree/[50,10]/[insertLast(1)]", tree50_10, dupe(treeTransform(tree50_10, [insertLast(1)]), 2)),
-      new Group("tree/[10,50]/[insertLast(1)]", tree10_50, dupe(treeTransform(tree10_50, [insertLast(1)]), 2)),
-      new Group("tree/[5,100]/[insertLast(1)]", tree5_100, dupe(treeTransform(tree5_100, [insertLast(1)]), 2)),
+      testCase("tree/[500]/[insertLast(1)]", tree500, scuClone(treeTransform(tree500, [insertLast(1)]))),
+      testCase("tree/[50,10]/[insertLast(1)]", tree50_10, scuClone(treeTransform(tree50_10, [insertLast(1)]))),
+      testCase("tree/[10,50]/[insertLast(1)]", tree10_50, scuClone(treeTransform(tree10_50, [insertLast(1)]))),
+      testCase("tree/[5,100]/[insertLast(1)]", tree5_100, scuClone(treeTransform(tree5_100, [insertLast(1)]))),
 
-      new Group("tree/[500]/[removeFirst(1)]", tree500, dupe(treeTransform(tree500, [removeFirst(1)]), 2)),
-      new Group("tree/[50,10]/[removeFirst(1)]", tree50_10, dupe(treeTransform(tree50_10, [removeFirst(1)]), 2)),
-      new Group("tree/[10,50]/[removeFirst(1)]", tree10_50, dupe(treeTransform(tree10_50, [removeFirst(1)]), 2)),
-      new Group("tree/[5,100]/[removeFirst(1)]", tree5_100, dupe(treeTransform(tree5_100, [removeFirst(1)]), 2)),
+      testCase("tree/[500]/[removeFirst(1)]", tree500, scuClone(treeTransform(tree500, [removeFirst(1)]))),
+      testCase("tree/[50,10]/[removeFirst(1)]", tree50_10, scuClone(treeTransform(tree50_10, [removeFirst(1)]))),
+      testCase("tree/[10,50]/[removeFirst(1)]", tree10_50, scuClone(treeTransform(tree10_50, [removeFirst(1)]))),
+      testCase("tree/[5,100]/[removeFirst(1)]", tree5_100, scuClone(treeTransform(tree5_100, [removeFirst(1)]))),
 
-      new Group("tree/[500]/[removeLast(1)]", tree500, dupe(treeTransform(tree500, [removeLast(1)]), 2)),
-      new Group("tree/[50,10]/[removeLast(1)]", tree50_10, dupe(treeTransform(tree50_10, [removeLast(1)]), 2)),
-      new Group("tree/[10,50]/[removeLast(1)]", tree10_50, dupe(treeTransform(tree10_50, [removeLast(1)]), 2)),
-      new Group("tree/[5,100]/[removeLast(1)]", tree5_100, dupe(treeTransform(tree5_100, [removeLast(1)]), 2)),
+      testCase("tree/[500]/[removeLast(1)]", tree500, scuClone(treeTransform(tree500, [removeLast(1)]))),
+      testCase("tree/[50,10]/[removeLast(1)]", tree50_10, scuClone(treeTransform(tree50_10, [removeLast(1)]))),
+      testCase("tree/[10,50]/[removeLast(1)]", tree10_50, scuClone(treeTransform(tree10_50, [removeLast(1)]))),
+      testCase("tree/[5,100]/[removeLast(1)]", tree5_100, scuClone(treeTransform(tree5_100, [removeLast(1)]))),
 
-      new Group("tree/[500]/[moveFromEndToStart(1)]", tree500,
-        dupe(treeTransform(tree500, [moveFromEndToStart(1)]), 2)),
-      new Group("tree/[50,10]/[moveFromEndToStart(1)]", tree50_10,
-        dupe(treeTransform(tree50_10, [moveFromEndToStart(1)]), 2)),
-      new Group("tree/[10,50]/[moveFromEndToStart(1)]", tree10_50,
-        dupe(treeTransform(tree10_50, [moveFromEndToStart(1)]), 2)),
-      new Group("tree/[5,100]/[moveFromEndToStart(1)]", tree5_100,
-        dupe(treeTransform(tree5_100, [moveFromEndToStart(1)]), 2)),
+      testCase("tree/[500]/[moveFromEndToStart(1)]", tree500,
+        scuClone(treeTransform(tree500, [moveFromEndToStart(1)]))),
+      testCase("tree/[50,10]/[moveFromEndToStart(1)]", tree50_10,
+        scuClone(treeTransform(tree50_10, [moveFromEndToStart(1)]))),
+      testCase("tree/[10,50]/[moveFromEndToStart(1)]", tree10_50,
+        scuClone(treeTransform(tree10_50, [moveFromEndToStart(1)]))),
+      testCase("tree/[5,100]/[moveFromEndToStart(1)]", tree5_100,
+        scuClone(treeTransform(tree5_100, [moveFromEndToStart(1)]))),
 
-      new Group("tree/[500]/[moveFromStartToEnd(1)]", tree500,
-        dupe(treeTransform(tree500, [moveFromStartToEnd(1)]), 2)),
-      new Group("tree/[50,10]/[moveFromStartToEnd(1)]", tree50_10,
-        dupe(treeTransform(tree50_10, [moveFromStartToEnd(1)]), 2)),
-      new Group("tree/[10,50]/[moveFromStartToEnd(1)]", tree10_50,
-        dupe(treeTransform(tree10_50, [moveFromStartToEnd(1)]), 2)),
-      new Group("tree/[5,100]/[moveFromStartToEnd(1)]", tree5_100,
-        dupe(treeTransform(tree5_100, [moveFromStartToEnd(1)]), 2)),
+      testCase("tree/[500]/[moveFromStartToEnd(1)]", tree500,
+        scuClone(treeTransform(tree500, [moveFromStartToEnd(1)]))),
+      testCase("tree/[50,10]/[moveFromStartToEnd(1)]", tree50_10,
+        scuClone(treeTransform(tree50_10, [moveFromStartToEnd(1)]))),
+      testCase("tree/[10,50]/[moveFromStartToEnd(1)]", tree10_50,
+        scuClone(treeTransform(tree10_50, [moveFromStartToEnd(1)]))),
+      testCase("tree/[5,100]/[moveFromStartToEnd(1)]", tree5_100,
+        scuClone(treeTransform(tree5_100, [moveFromStartToEnd(1)]))),
 
       // special use case that should trigger worst case scenario for kivi library
-      new Group("tree/[500]/[kivi_worst_case]", tree500, dupe(
-        treeTransform(treeTransform(treeTransform(tree500, [removeFirst(1)]), [removeLast(1)]), [reverse]),
-        2)),
+      testCase("tree/[500]/[kivi_worst_case]", tree500, scuClone(
+        treeTransform(treeTransform(treeTransform(tree500, [removeFirst(1)]), [removeLast(1)]), [reverse]))),
 
       // special use case that should trigger worst case scenario for snabbdom library
-      new Group("tree/[500]/[snabbdom_worst_case]", tree500, dupe(
-        treeTransform(tree500, [snabbdomWorstCase]),
-        2)),
+      testCase("tree/[500]/[snabbdom_worst_case]", tree500, scuClone(
+        treeTransform(tree500, [snabbdomWorstCase]))),
 
       // special use case that should trigger worst case scenario for react library
-      new Group("tree/[500]/[react_worst_case]", tree500, dupe(
+      testCase("tree/[500]/[react_worst_case]", tree500, scuClone(
         treeTransform(treeTransform(treeTransform(tree500,
          [removeFirst(1)]),
          [removeLast(1)]),
-         [moveFromEndToStart(1)]),
-        2)),
+         [moveFromEndToStart(1)]))),
 
       // special use case that should trigger worst case scenario for virtual-dom library
-      new Group("tree/[500]/[virtual_dom_worst_case]", tree500,
-        dupe(treeTransform(tree500, [moveFromStartToEnd(2)]), 2)),
+      testCase("tree/[500]/[virtual_dom_worst_case]", tree500,
+        scuClone(treeTransform(tree500, [moveFromStartToEnd(2)]))),
     ];
   }
 
@@ -512,7 +490,7 @@ export type ProgressHandler = (progress: number) => void;
 
 export class Executor {
   iterations: number;
-  groups: Group[];
+  groups: TestCase[];
   onUpdate: UpdateHandler;
   onFinish: FinishHandler;
   onProgress: ProgressHandler;
@@ -520,10 +498,9 @@ export class Executor {
   private _samples: Result;
   private _state: "init" | "update";
   private _currentGroup: number;
-  private _currentGroupState: number;
   private _currentIteration: number;
 
-  constructor(iterations: number, groups: Group[], onUpdate: UpdateHandler, onFinish: FinishHandler,
+  constructor(iterations: number, groups: TestCase[], onUpdate: UpdateHandler, onFinish: FinishHandler,
       onProgress: ProgressHandler) {
     this.iterations = iterations;
     this.groups = groups;
@@ -534,7 +511,6 @@ export class Executor {
     this._samples = {};
     this._state = "init";
     this._currentGroup = 0;
-    this._currentGroupState = 0;
     this._currentIteration = 0;
   }
 
@@ -550,7 +526,7 @@ export class Executor {
       requestAnimationFrame(this._next);
     } else if (this._state === "update") {
       let t = window.performance.now();
-      this.onUpdate(group.to[this._currentGroupState++], "update");
+      this.onUpdate(group.to, "update");
       t = window.performance.now() - t;
 
       this.onProgress(
@@ -563,23 +539,17 @@ export class Executor {
       samples.push(t);
 
       this._state = "init";
-      if (this._currentGroupState < group.to.length) {
+      this._currentGroup++;
+      if (this._currentGroup < this.groups.length) {
         requestAnimationFrame(this._next);
       } else {
-        this._currentGroup++;
-        if (this._currentGroup < this.groups.length) {
-          this._currentGroupState = 0;
+        this._currentIteration++;
+        if (this._currentIteration < this.iterations) {
+          this._currentGroup = 0;
           requestAnimationFrame(this._next);
         } else {
-          this._currentIteration++;
-          if (this._currentIteration < this.iterations) {
-            this._currentGroup = 0;
-            this._currentGroupState = 0;
-            requestAnimationFrame(this._next);
-          } else {
-            this.onFinish(this._samples);
-            this.onProgress(1);
-          }
+          this.onFinish(this._samples);
+          this.onProgress(1);
         }
       }
     }
