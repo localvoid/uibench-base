@@ -3,6 +3,10 @@ html, body {
   padding: 0;
 }
 
+html {
+  overflow-y: scroll;
+}
+
 .ProgressBar {
   position: absolute;
   top: 0;
