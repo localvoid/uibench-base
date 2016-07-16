@@ -205,9 +205,10 @@
     }
     function virtualdomWorstCase(children) {
         var r = children.slice();
-        var a = r.splice(1, 1);
-        var b = r.pop();
-        r.push(a[0], b);
+        var a = r[0];
+        var b = r[r.length - 1];
+        r[0] = b;
+        r[r.length - 1] = a;
         return r;
     }
     function insertFirst(n) {
