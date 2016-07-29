@@ -493,7 +493,7 @@
         if (qs["filter"] !== undefined) {
             config.filter = qs["filter"];
         }
-        if (qs["full_render_time"] !== undefined) {
+        if (qs["fullRenderTime"] !== undefined) {
             config.fullRenderTime = true;
         }
         var initial = new AppState("home", new HomeState(), TableState.create(0, 0), AnimState.create(config.mobile ? 30 : 100), TreeState.create([0]));
