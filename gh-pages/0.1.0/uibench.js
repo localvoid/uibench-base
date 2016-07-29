@@ -442,6 +442,7 @@
         enableDOMRecycling: false,
         filter: null,
         fullRenderTime: false,
+        timelineMarks: false,
     };
     function parseQueryString(a) {
         if (a.length === 0) {
@@ -495,6 +496,9 @@
         }
         if (qs["fullRenderTime"] !== undefined) {
             config.fullRenderTime = true;
+        }
+        if (qs["timelineMarks"] !== undefined) {
+            config.timelineMarks = true;
         }
         var initial = new AppState("home", new HomeState(), TableState.create(0, 0), AnimState.create(config.mobile ? 30 : 100), TreeState.create([0]));
         var initialTable = switchTo(initial, "table");
@@ -784,11 +788,17 @@
             this._next = function () {
                 var group = _this.groups[_this._currentGroup];
                 if (_this._state === "init") {
+                    if (config.timelineMarks) {
+                        console.timeStamp("init " + group.name);
+                    }
                     _this.onUpdate(group.from, "init");
                     _this._state = "update";
                     requestAnimationFrame(_this._next);
                 }
                 else if (_this._state === "update") {
+                    if (config.timelineMarks) {
+                        console.timeStamp("update " + group.name);
+                    }
                     _this._startTime = window.performance.now();
                     _this.onUpdate(group.to, "update");
                     _this._state = "measure_time";
@@ -801,6 +811,9 @@
                 }
                 else {
                     var t = window.performance.now() - _this._startTime;
+                    if (config.timelineMarks) {
+                        console.timeStamp("measure_time " + group.name);
+                    }
                     _this.onProgress((_this._currentIteration * _this.groups.length + _this._currentGroup) / (_this.groups.length * _this.iterations));
                     var samples = _this._samples[group.name];
                     if (samples === undefined) {

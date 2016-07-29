@@ -5,6 +5,12 @@ import {reverse, insertFirst, insertLast, removeFirst, removeLast, moveFromEndTo
   moveFromStartToEnd, snabbdomWorstCase} from "./tree_transformers";
 import {specTest, scuTest, recyclingTest} from "./tests";
 
+declare global {
+  interface Console {
+    timeStamp(name: string): void;
+  }
+}
+
 // performance.now() polyfill
 // https://gist.github.com/paulirish/5438650
 // prepare base perf object
@@ -48,6 +54,7 @@ export interface Config {
   enableDOMRecycling: boolean;
   filter: string | null;
   fullRenderTime: boolean;
+  timelineMarks: boolean;
 }
 
 export const config = {
@@ -61,6 +68,7 @@ export const config = {
   enableDOMRecycling: false,
   filter: null,
   fullRenderTime: false,
+  timelineMarks: false,
 } as Config;
 
 function parseQueryString(a: string[]): { [key: string]: string } {
@@ -117,6 +125,9 @@ export function init(name: string, version: string): Config {
   }
   if (qs["fullRenderTime"] !== undefined) {
     config.fullRenderTime = true;
+  }
+  if (qs["timelineMarks"] !== undefined) {
+    config.timelineMarks = true;
   }
 
   const initial = new AppState(
@@ -548,10 +559,16 @@ class Executor {
   private _next = () => {
     const group = this.groups[this._currentGroup];
     if (this._state === "init") {
+      if (config.timelineMarks) {
+        console.timeStamp(`init ${group.name}`);
+      }
       this.onUpdate(group.from, "init");
       this._state = "update";
       requestAnimationFrame(this._next);
     } else if (this._state === "update") {
+      if (config.timelineMarks) {
+        console.timeStamp(`update ${group.name}`);
+      }
       this._startTime = window.performance.now();
       this.onUpdate(group.to, "update");
       this._state = "measure_time";
@@ -562,6 +579,9 @@ class Executor {
       }
     } else { // this._state === "measure_time"
       const t = window.performance.now() - this._startTime;
+      if (config.timelineMarks) {
+        console.timeStamp(`measure_time ${group.name}`);
+      }
 
       this.onProgress(
         (this._currentIteration * this.groups.length + this._currentGroup) / (this.groups.length * this.iterations));
