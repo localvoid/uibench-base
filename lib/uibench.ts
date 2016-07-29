@@ -47,6 +47,7 @@ export interface Config {
   disableSCU: boolean;
   enableDOMRecycling: boolean;
   filter: string | null;
+  fullRenderTime: boolean;
 }
 
 export const config = {
@@ -59,6 +60,7 @@ export const config = {
   disableSCU: false,
   enableDOMRecycling: false,
   filter: null,
+  fullRenderTime: false,
 } as Config;
 
 function parseQueryString(a: string[]): { [key: string]: string } {
@@ -112,6 +114,9 @@ export function init(name: string, version: string): Config {
   }
   if (qs["filter"] !== undefined) {
     config.filter = qs["filter"];
+  }
+  if (qs["full_render_time"] !== undefined) {
+    config.fullRenderTime = true;
   }
 
   const initial = new AppState(
@@ -483,12 +488,32 @@ export function init(name: string, version: string): Config {
   return config;
 }
 
+let macrotasks = [] as (() => void)[];
+
+window.addEventListener("message", function(e) {
+  if (e.source === window && e.data === "uibench-macrotask") {
+    const tasks = macrotasks;
+    macrotasks = [];
+    for (let i = 0; i < tasks.length; i++) {
+      tasks[i]();
+    }
+  }
+});
+
+function scheduleMacrotask(cb: () => void): void {
+  if (macrotasks.length === 0) {
+    window.postMessage("uibench-macrotask", "*");
+  }
+  macrotasks.push(cb);
+}
+
+
 export type Result = {[name: string]: number[]};
 export type UpdateHandler = (state: AppState, type: "init" | "update") => void;
 export type FinishHandler = (result: Result) => void;
 export type ProgressHandler = (progress: number) => void;
 
-export class Executor {
+class Executor {
   iterations: number;
   groups: TestCase[];
   onUpdate: UpdateHandler;
@@ -496,9 +521,10 @@ export class Executor {
   onProgress: ProgressHandler;
 
   private _samples: Result;
-  private _state: "init" | "update";
+  private _state: "init" | "update" | "measure_time";
   private _currentGroup: number;
   private _currentIteration: number;
+  private _startTime: number;
 
   constructor(iterations: number, groups: TestCase[], onUpdate: UpdateHandler, onFinish: FinishHandler,
       onProgress: ProgressHandler) {
@@ -512,6 +538,7 @@ export class Executor {
     this._state = "init";
     this._currentGroup = 0;
     this._currentIteration = 0;
+    this._startTime = 0;
   }
 
   run(): void {
@@ -525,9 +552,16 @@ export class Executor {
       this._state = "update";
       requestAnimationFrame(this._next);
     } else if (this._state === "update") {
-      let t = window.performance.now();
+      this._startTime = window.performance.now();
       this.onUpdate(group.to, "update");
-      t = window.performance.now() - t;
+      this._state = "measure_time";
+      if (config.fullRenderTime) {
+        scheduleMacrotask(this._next);
+      } else {
+        this._next();
+      }
+    } else { // this._state === "measure_time"
+      const t = window.performance.now() - this._startTime;
 
       this.onProgress(
         (this._currentIteration * this.groups.length + this._currentGroup) / (this.groups.length * this.iterations));
@@ -567,6 +601,9 @@ export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: s
       }
       if (scuSupported && !config.disableSCU) {
         name += "+s";
+      }
+      if (config.fullRenderTime) {
+        name += "+f";
       }
 
       filter = filter || config.filter;
