@@ -441,6 +441,7 @@
         disableSCU: false,
         enableDOMRecycling: false,
         filter: null,
+        fullRenderTime: false,
     };
     function parseQueryString(a) {
         if (a.length === 0) {
@@ -491,6 +492,9 @@
         }
         if (qs["filter"] !== undefined) {
             config.filter = qs["filter"];
+        }
+        if (qs["fullRenderTime"] !== undefined) {
+            config.fullRenderTime = true;
         }
         var initial = new AppState("home", new HomeState(), TableState.create(0, 0), AnimState.create(config.mobile ? 30 : 100), TreeState.create([0]));
         var initialTable = switchTo(initial, "table");
@@ -758,6 +762,22 @@
         }
         return config;
     }
+    var macrotasks = [];
+    window.addEventListener("message", function (e) {
+        if (e.source === window && e.data === "uibench-macrotask") {
+            var tasks = macrotasks;
+            macrotasks = [];
+            for (var i = 0; i < tasks.length; i++) {
+                tasks[i]();
+            }
+        }
+    });
+    function scheduleMacrotask(cb) {
+        if (macrotasks.length === 0) {
+            window.postMessage("uibench-macrotask", "*");
+        }
+        macrotasks.push(cb);
+    }
     var Executor = (function () {
         function Executor(iterations, groups, onUpdate, onFinish, onProgress) {
             var _this = this;
@@ -769,9 +789,18 @@
                     requestAnimationFrame(_this._next);
                 }
                 else if (_this._state === "update") {
-                    var t = window.performance.now();
+                    _this._startTime = window.performance.now();
                     _this.onUpdate(group.to, "update");
-                    t = window.performance.now() - t;
+                    _this._state = "measure_time";
+                    if (config.fullRenderTime) {
+                        scheduleMacrotask(_this._next);
+                    }
+                    else {
+                        _this._next();
+                    }
+                }
+                else {
+                    var t = window.performance.now() - _this._startTime;
                     _this.onProgress((_this._currentIteration * _this.groups.length + _this._currentGroup) / (_this.groups.length * _this.iterations));
                     var samples = _this._samples[group.name];
                     if (samples === undefined) {
@@ -805,6 +834,7 @@
             this._state = "init";
             this._currentGroup = 0;
             this._currentIteration = 0;
+            this._startTime = 0;
         }
         Executor.prototype.run = function () {
             this._next();
@@ -822,6 +852,9 @@
                 }
                 if (scuSupported && !config.disableSCU) {
                     name += "+s";
+                }
+                if (config.fullRenderTime) {
+                    name += "+f";
                 }
                 filter = filter || config.filter;
                 if (tests && filter) {
@@ -863,6 +896,5 @@
     exports.init = init;
     exports.run = run;
     exports.TestCase = TestCase;
-    exports.Executor = Executor;
 
 }));
