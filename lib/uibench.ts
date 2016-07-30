@@ -55,6 +55,8 @@ export interface Config {
   filter: string | null;
   fullRenderTime: boolean;
   timelineMarks: boolean;
+  disableChecks: boolean;
+  startDelay: number;
 }
 
 export const config = {
@@ -69,6 +71,8 @@ export const config = {
   filter: null,
   fullRenderTime: false,
   timelineMarks: false,
+  disableChecks: false,
+  startDelay: 0,
 } as Config;
 
 function parseQueryString(a: string[]): { [key: string]: string } {
@@ -128,6 +132,12 @@ export function init(name: string, version: string): Config {
   }
   if (qs["timelineMarks"] !== undefined) {
     config.timelineMarks = true;
+  }
+  if (qs["disableChecks"] !== undefined) {
+    config.disableChecks = true;
+  }
+  if (qs["startDelay"] !== undefined) {
+    config.startDelay = parseInt(qs["startDelay"], 10);
   }
 
   const initial = new AppState(
@@ -611,7 +621,9 @@ class Executor {
 }
 
 export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: string | null): void {
-  specTest(onUpdate);
+  if (!config.disableChecks) {
+    specTest(onUpdate);
+  }
   scuTest(onUpdate, (scuSupported) => {
     recyclingTest(onUpdate, (recyclingEnabled) => {
       let tests = config.tests;
@@ -640,7 +652,7 @@ export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: s
       document.body.appendChild(progressBar);
       progressBar.appendChild(progressBarInner);
 
-      if (tests) {
+      function run() {
         const e = new Executor(config.iterations, tests, onUpdate,
           (samples) => {
             onFinish(samples);
@@ -659,6 +671,14 @@ export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: s
             progressBarInner.style.width = `${Math.round(progress * 100)}%`;
           });
         e.run();
+      }
+
+      if (tests) {
+        if (config.startDelay > 0) {
+          setTimeout(run, config.startDelay);
+        } else {
+          run();
+        }
       } else {
         onFinish({});
       }

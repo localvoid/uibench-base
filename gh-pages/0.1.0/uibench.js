@@ -443,6 +443,8 @@
         filter: null,
         fullRenderTime: false,
         timelineMarks: false,
+        disableChecks: false,
+        startDelay: 0,
     };
     function parseQueryString(a) {
         if (a.length === 0) {
@@ -499,6 +501,12 @@
         }
         if (qs["timelineMarks"] !== undefined) {
             config.timelineMarks = true;
+        }
+        if (qs["disableChecks"] !== undefined) {
+            config.disableChecks = true;
+        }
+        if (qs["startDelay"] !== undefined) {
+            config.startDelay = parseInt(qs["startDelay"], 10);
         }
         var initial = new AppState("home", new HomeState(), TableState.create(0, 0), AnimState.create(config.mobile ? 30 : 100), TreeState.create([0]));
         var initialTable = switchTo(initial, "table");
@@ -855,7 +863,9 @@
         return Executor;
     }());
     function run(onUpdate, onFinish, filter) {
-        specTest(onUpdate);
+        if (!config.disableChecks) {
+            specTest(onUpdate);
+        }
         scuTest(onUpdate, function (scuSupported) {
             recyclingTest(onUpdate, function (recyclingEnabled) {
                 var tests = config.tests;
@@ -880,7 +890,7 @@
                 progressBarInner.style.width = "0";
                 document.body.appendChild(progressBar);
                 progressBar.appendChild(progressBarInner);
-                if (tests) {
+                function run() {
                     var e = new Executor(config.iterations, tests, onUpdate, function (samples) {
                         onFinish(samples);
                         if (config.report) {
@@ -897,6 +907,14 @@
                         progressBarInner.style.width = Math.round(progress * 100) + "%";
                     });
                     e.run();
+                }
+                if (tests) {
+                    if (config.startDelay > 0) {
+                        setTimeout(run, config.startDelay);
+                    }
+                    else {
+                        run();
+                    }
                 }
                 else {
                     onFinish({});
