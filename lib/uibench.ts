@@ -637,6 +637,9 @@ export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: s
       if (config.fullRenderTime) {
         name += "+f";
       }
+      if (config.disableChecks) {
+        name += "+d";
+      }
 
       filter = filter || config.filter;
 
@@ -653,7 +656,7 @@ export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: s
       progressBar.appendChild(progressBarInner);
 
       function run() {
-        const e = new Executor(config.iterations, tests, onUpdate,
+        const e = new Executor(config.iterations, tests as TestCase[], onUpdate,
           (samples) => {
             onFinish(samples);
             if (config.report) {

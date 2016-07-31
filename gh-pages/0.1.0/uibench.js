@@ -879,6 +879,9 @@
                 if (config.fullRenderTime) {
                     name += "+f";
                 }
+                if (config.disableChecks) {
+                    name += "+d";
+                }
                 filter = filter || config.filter;
                 if (tests && filter) {
                     tests = tests.filter(function (t) { return t.name.indexOf(filter) !== -1; });
