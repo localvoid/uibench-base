@@ -446,6 +446,15 @@
         disableChecks: false,
         startDelay: 0,
     };
+    var timings = {
+        start: 0,
+        run: 0,
+        firstRender: 0,
+    };
+    var memory = {
+        start: 0,
+        max: 0,
+    };
     function parseQueryString(a) {
         if (a.length === 0) {
             return {};
@@ -508,6 +517,9 @@
         if (qs["startDelay"] !== undefined) {
             config.startDelay = parseInt(qs["startDelay"], 10);
         }
+        return config;
+    }
+    function initTests() {
         var initial = new AppState("home", new HomeState(), TableState.create(0, 0), AnimState.create(config.mobile ? 30 : 100), TreeState.create([0]));
         var initialTable = switchTo(initial, "table");
         var initialAnim = switchTo(initial, "anim");
@@ -772,7 +784,6 @@
                 testCase("tree/[500]/[virtual_dom_worst_case]", tree500, scuClone(treeTransform(tree500, [moveFromStartToEnd(2)]))),
             ];
         }
-        return config;
     }
     var macrotasks = [];
     window.addEventListener("message", function (e) {
@@ -801,6 +812,9 @@
                     }
                     _this.onUpdate(group.from, "init");
                     _this._state = "update";
+                    if (memory.start !== 0) {
+                        memory.max = Math.max(memory.max, performance.memory.usedJSHeapSize);
+                    }
                     requestAnimationFrame(_this._next);
                 }
                 else if (_this._state === "update") {
@@ -821,6 +835,9 @@
                     var t = window.performance.now() - _this._startTime;
                     if (config.timelineMarks) {
                         console.timeStamp("measure_time " + group.name);
+                    }
+                    if (memory.start !== 0) {
+                        memory.max = Math.max(memory.max, performance.memory.usedJSHeapSize);
                     }
                     _this.onProgress((_this._currentIteration * _this.groups.length + _this._currentGroup) / (_this.groups.length * _this.iterations));
                     var samples = _this._samples[group.name];
@@ -862,69 +879,92 @@
         };
         return Executor;
     }());
-    function run(onUpdate, onFinish, filter) {
-        if (!config.disableChecks) {
-            specTest(onUpdate);
+    function firstRenderTime(onUpdate, done) {
+        var state = new AppState("table", new HomeState(), config.mobile ? TableState.create(30, 4) : TableState.create(100, 4), AnimState.create(0), TreeState.create([0]));
+        var t = performance.now();
+        onUpdate(state, "init");
+        function finish() {
+            timings.firstRender = performance.now() - t;
+            done();
         }
-        scuTest(onUpdate, function (scuSupported) {
-            recyclingTest(onUpdate, function (recyclingEnabled) {
-                var tests = config.tests;
-                var name = config.name;
-                if (recyclingEnabled) {
-                    name += "+r";
-                }
-                if (scuSupported && !config.disableSCU) {
-                    name += "+s";
-                }
-                if (config.fullRenderTime) {
-                    name += "+f";
-                }
-                if (config.disableChecks) {
-                    name += "+d";
-                }
-                filter = filter || config.filter;
-                if (tests && filter) {
-                    tests = tests.filter(function (t) { return t.name.indexOf(filter) !== -1; });
-                }
-                var progressBar = document.createElement("div");
-                progressBar.className = "ProgressBar";
-                var progressBarInner = document.createElement("div");
-                progressBarInner.className = "ProgressBar_inner";
-                progressBarInner.style.width = "0";
-                document.body.appendChild(progressBar);
-                progressBar.appendChild(progressBarInner);
-                function run() {
-                    var e = new Executor(config.iterations, tests, onUpdate, function (samples) {
-                        onFinish(samples);
-                        if (config.report) {
-                            window.opener.postMessage({
-                                "type": "report",
-                                "data": {
-                                    "name": name,
-                                    "version": config.version,
-                                    "samples": samples,
-                                },
-                            }, "*");
+        if (config.fullRenderTime) {
+            scheduleMacrotask(finish);
+        }
+        finish();
+    }
+    function run(onUpdate, onFinish, filter) {
+        timings.run = performance.now();
+        if (performance.memory !== undefined) {
+            memory.start = performance.memory.usedJSHeapSize;
+        }
+        firstRenderTime(onUpdate, function () {
+            if (!config.disableChecks) {
+                specTest(onUpdate);
+            }
+            scuTest(onUpdate, function (scuSupported) {
+                recyclingTest(onUpdate, function (recyclingEnabled) {
+                    initTests();
+                    var tests = config.tests;
+                    var name = config.name;
+                    if (recyclingEnabled) {
+                        name += "+r";
+                    }
+                    if (scuSupported && !config.disableSCU) {
+                        name += "+s";
+                    }
+                    if (config.fullRenderTime) {
+                        name += "+f";
+                    }
+                    if (config.disableChecks) {
+                        name += "+d";
+                    }
+                    filter = filter || config.filter;
+                    if (tests && filter) {
+                        tests = tests.filter(function (t) { return t.name.indexOf(filter) !== -1; });
+                    }
+                    var progressBar = document.createElement("div");
+                    progressBar.className = "ProgressBar";
+                    var progressBarInner = document.createElement("div");
+                    progressBarInner.className = "ProgressBar_inner";
+                    progressBarInner.style.width = "0";
+                    document.body.appendChild(progressBar);
+                    progressBar.appendChild(progressBarInner);
+                    function run() {
+                        var e = new Executor(config.iterations, tests, onUpdate, function (samples) {
+                            onFinish(samples);
+                            if (config.report) {
+                                window.opener.postMessage({
+                                    "type": "report",
+                                    "data": {
+                                        "name": name,
+                                        "version": config.version,
+                                        "timings": timings,
+                                        "memory": memory,
+                                        "samples": samples,
+                                    },
+                                }, "*");
+                            }
+                        }, function (progress) {
+                            progressBarInner.style.width = Math.round(progress * 100) + "%";
+                        });
+                        e.run();
+                    }
+                    if (tests) {
+                        if (config.startDelay > 0) {
+                            setTimeout(run, config.startDelay);
                         }
-                    }, function (progress) {
-                        progressBarInner.style.width = Math.round(progress * 100) + "%";
-                    });
-                    e.run();
-                }
-                if (tests) {
-                    if (config.startDelay > 0) {
-                        setTimeout(run, config.startDelay);
+                        else {
+                            run();
+                        }
                     }
                     else {
-                        run();
+                        onFinish({});
                     }
-                }
-                else {
-                    onFinish({});
-                }
+                });
             });
         });
     }
+    timings.start = performance.now();
 
     exports.config = config;
     exports.init = init;
