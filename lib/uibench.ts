@@ -9,6 +9,10 @@ declare global {
   interface Console {
     timeStamp(name: string): void;
   }
+
+  interface Performance {
+    memory: any;
+  }
 }
 
 // performance.now() polyfill
@@ -75,6 +79,17 @@ export const config = {
   startDelay: 0,
 } as Config;
 
+const timings = {
+  start: 0,
+  run: 0,
+  firstRender: 0,
+};
+
+const memory = {
+  start: 0,
+  max: 0,
+};
+
 function parseQueryString(a: string[]): { [key: string]: string } {
   if (a.length === 0) {
     return {};
@@ -140,6 +155,10 @@ export function init(name: string, version: string): Config {
     config.startDelay = parseInt(qs["startDelay"], 10);
   }
 
+  return config;
+}
+
+function initTests() {
   const initial = new AppState(
     "home",
     new HomeState(),
@@ -505,8 +524,6 @@ export function init(name: string, version: string): Config {
         scuClone(treeTransform(tree500, [moveFromStartToEnd(2)]))),
     ];
   }
-
-  return config;
 }
 
 let macrotasks = [] as (() => void)[];
@@ -574,6 +591,9 @@ class Executor {
       }
       this.onUpdate(group.from, "init");
       this._state = "update";
+      if (memory.start !== 0) {
+        memory.max = Math.max(memory.max, performance.memory.usedJSHeapSize);
+      }
       requestAnimationFrame(this._next);
     } else if (this._state === "update") {
       if (config.timelineMarks) {
@@ -591,6 +611,9 @@ class Executor {
       const t = window.performance.now() - this._startTime;
       if (config.timelineMarks) {
         console.timeStamp(`measure_time ${group.name}`);
+      }
+      if (memory.start !== 0) {
+        memory.max = Math.max(memory.max, performance.memory.usedJSHeapSize);
       }
 
       this.onProgress(
@@ -620,71 +643,106 @@ class Executor {
   }
 }
 
-export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: string | null): void {
-  if (!config.disableChecks) {
-    specTest(onUpdate);
+function firstRenderTime(onUpdate: UpdateHandler, done: () => void): void {
+  const state = new AppState(
+    "table",
+    new HomeState(),
+    config.mobile ? TableState.create(30, 4) : TableState.create(100, 4),
+    AnimState.create(0),
+    TreeState.create([0]));
+
+  const t = performance.now();
+  onUpdate(state, "init");
+
+  function finish() {
+    timings.firstRender = performance.now() - t;
+    done();
   }
-  scuTest(onUpdate, (scuSupported) => {
-    recyclingTest(onUpdate, (recyclingEnabled) => {
-      let tests = config.tests;
-      let name = config.name;
-      if (recyclingEnabled) {
-        name += "+r";
-      }
-      if (scuSupported && !config.disableSCU) {
-        name += "+s";
-      }
-      if (config.fullRenderTime) {
-        name += "+f";
-      }
-      if (config.disableChecks) {
-        name += "+d";
-      }
 
-      filter = filter || config.filter;
+  if (config.fullRenderTime) {
+    scheduleMacrotask(finish);
+  } else {
+    finish();
+  }
+}
 
-      if (tests && filter) {
-        tests = tests.filter((t) => t.name.indexOf(filter as string) !== -1);
-      }
+export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: string | null): void {
+  timings.run = performance.now();
+  if (performance.memory !== undefined) {
+    memory.start = performance.memory.usedJSHeapSize;
+  }
 
-      const progressBar = document.createElement("div");
-      progressBar.className = "ProgressBar";
-      const progressBarInner = document.createElement("div");
-      progressBarInner.className = "ProgressBar_inner";
-      progressBarInner.style.width = "0";
-      document.body.appendChild(progressBar);
-      progressBar.appendChild(progressBarInner);
-
-      function run() {
-        const e = new Executor(config.iterations, tests as TestCase[], onUpdate,
-          (samples) => {
-            onFinish(samples);
-            if (config.report) {
-              window.opener.postMessage({
-                "type": "report",
-                "data": {
-                  "name": name,
-                  "version": config.version,
-                  "samples": samples,
-                },
-              }, "*");
-            }
-          },
-          (progress) => {
-            progressBarInner.style.width = `${Math.round(progress * 100)}%`;
-          });
-        e.run();
-      }
-
-      if (tests) {
-        if (config.startDelay > 0) {
-          setTimeout(run, config.startDelay);
-        } else {
-          run();
+  firstRenderTime(onUpdate, () => {
+    if (!config.disableChecks) {
+      specTest(onUpdate);
+    }
+    scuTest(onUpdate, (scuSupported) => {
+      recyclingTest(onUpdate, (recyclingEnabled) => {
+        initTests();
+        let tests = config.tests;
+        let name = config.name;
+        if (recyclingEnabled) {
+          name += "+r";
         }
-      } else {
-        onFinish({});
-      }
+        if (scuSupported && !config.disableSCU) {
+          name += "+s";
+        }
+        if (config.fullRenderTime) {
+          name += "+f";
+        }
+        if (config.disableChecks) {
+          name += "+d";
+        }
+
+        filter = filter || config.filter;
+
+        if (tests && filter) {
+          tests = tests.filter((t) => t.name.indexOf(filter as string) !== -1);
+        }
+
+        const progressBar = document.createElement("div");
+        progressBar.className = "ProgressBar";
+        const progressBarInner = document.createElement("div");
+        progressBarInner.className = "ProgressBar_inner";
+        progressBarInner.style.width = "0";
+        document.body.appendChild(progressBar);
+        progressBar.appendChild(progressBarInner);
+
+        function run() {
+          const e = new Executor(config.iterations, tests as TestCase[], onUpdate,
+            (samples) => {
+              onFinish(samples);
+              if (config.report) {
+                window.opener.postMessage({
+                  "type": "report",
+                  "data": {
+                    "name": name,
+                    "version": config.version,
+                    "timings": timings,
+                    "memory": memory,
+                    "samples": samples,
+                  },
+                }, "*");
+              }
+            },
+            (progress) => {
+              progressBarInner.style.width = `${Math.round(progress * 100)}%`;
+            });
+          e.run();
+        }
+
+        if (tests) {
+          if (config.startDelay > 0) {
+            setTimeout(run, config.startDelay);
+          } else {
+            run();
+          }
+        } else {
+          onFinish({});
+        }
+      });
     });
   });
 }
+
+timings.start = performance.now();
