@@ -890,7 +890,9 @@
         if (config.fullRenderTime) {
             scheduleMacrotask(finish);
         }
-        finish();
+        else {
+            finish();
+        }
     }
     function run(onUpdate, onFinish, filter) {
         timings.run = performance.now();
