@@ -446,7 +446,7 @@
         disableChecks: false,
         startDelay: 0,
     };
-    var timings = {
+    var times = {
         start: 0,
         run: 0,
         firstRender: 0,
@@ -885,7 +885,7 @@
         var t = performance.now();
         onUpdate(state, "init");
         function finish() {
-            timings.firstRender = performance.now() - t;
+            times.firstRender = performance.now() - t;
             done();
         }
         if (config.fullRenderTime) {
@@ -896,7 +896,7 @@
         }
     }
     function run(onUpdate, onFinish, filter) {
-        timings.run = performance.now();
+        times.run = performance.now();
         if (memory.initial !== 0) {
             memory.start = performance.memory.usedJSHeapSize;
         }
@@ -935,7 +935,7 @@
                                             "recycling": recyclingEnabled,
                                             "disableChecks": config.disableChecks,
                                         },
-                                        "timings": timings,
+                                        "times": times,
                                         "memory": memory,
                                         "iterations": config.iterations,
                                         "samples": samples,
@@ -962,7 +962,7 @@
             });
         });
     }
-    timings.start = performance.now();
+    times.start = performance.now();
 
     exports.config = config;
     exports.init = init;
