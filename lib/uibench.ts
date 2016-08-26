@@ -79,13 +79,14 @@ export const config = {
   startDelay: 0,
 } as Config;
 
-const timings = {
+const times = {
   start: 0,
   run: 0,
   firstRender: 0,
 };
 
 const memory = {
+  initial: performance.memory === undefined ? 0 : performance.memory.usedJSHeapSize,
   start: 0,
   max: 0,
 };
@@ -591,7 +592,7 @@ class Executor {
       }
       this.onUpdate(group.from, "init");
       this._state = "update";
-      if (memory.start !== 0) {
+      if (memory.initial !== 0) {
         memory.max = Math.max(memory.max, performance.memory.usedJSHeapSize);
       }
       requestAnimationFrame(this._next);
@@ -655,7 +656,7 @@ function firstRenderTime(onUpdate: UpdateHandler, done: () => void): void {
   onUpdate(state, "init");
 
   function finish() {
-    timings.firstRender = performance.now() - t;
+    times.firstRender = performance.now() - t;
     done();
   }
 
@@ -667,8 +668,8 @@ function firstRenderTime(onUpdate: UpdateHandler, done: () => void): void {
 }
 
 export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: string | null): void {
-  timings.run = performance.now();
-  if (performance.memory !== undefined) {
+  times.run = performance.now();
+  if (memory.initial !== 0) {
     memory.start = performance.memory.usedJSHeapSize;
   }
 
@@ -681,18 +682,6 @@ export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: s
         initTests();
         let tests = config.tests;
         let name = config.name;
-        if (recyclingEnabled) {
-          name += "+r";
-        }
-        if (scuSupported && !config.disableSCU) {
-          name += "+s";
-        }
-        if (config.fullRenderTime) {
-          name += "+f";
-        }
-        if (config.disableChecks) {
-          name += "+d";
-        }
 
         filter = filter || config.filter;
 
@@ -718,8 +707,15 @@ export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: s
                   "data": {
                     "name": name,
                     "version": config.version,
-                    "timings": timings,
+                    "flags": {
+                      "fullRenderTime": config.fullRenderTime,
+                      "scu": scuSupported && !config.disableSCU,
+                      "recycling": recyclingEnabled,
+                      "disableChecks": config.disableChecks,
+                    },
+                    "times": times,
                     "memory": memory,
+                    "iterations": config.iterations,
                     "samples": samples,
                   },
                 }, "*");
@@ -745,4 +741,4 @@ export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: s
   });
 }
 
-timings.start = performance.now();
+times.start = performance.now();

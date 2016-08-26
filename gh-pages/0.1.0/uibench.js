@@ -446,12 +446,13 @@
         disableChecks: false,
         startDelay: 0,
     };
-    var timings = {
+    var times = {
         start: 0,
         run: 0,
         firstRender: 0,
     };
     var memory = {
+        initial: performance.memory === undefined ? 0 : performance.memory.usedJSHeapSize,
         start: 0,
         max: 0,
     };
@@ -812,7 +813,7 @@
                     }
                     _this.onUpdate(group.from, "init");
                     _this._state = "update";
-                    if (memory.start !== 0) {
+                    if (memory.initial !== 0) {
                         memory.max = Math.max(memory.max, performance.memory.usedJSHeapSize);
                     }
                     requestAnimationFrame(_this._next);
@@ -884,7 +885,7 @@
         var t = performance.now();
         onUpdate(state, "init");
         function finish() {
-            timings.firstRender = performance.now() - t;
+            times.firstRender = performance.now() - t;
             done();
         }
         if (config.fullRenderTime) {
@@ -895,8 +896,8 @@
         }
     }
     function run(onUpdate, onFinish, filter) {
-        timings.run = performance.now();
-        if (performance.memory !== undefined) {
+        times.run = performance.now();
+        if (memory.initial !== 0) {
             memory.start = performance.memory.usedJSHeapSize;
         }
         firstRenderTime(onUpdate, function () {
@@ -908,18 +909,6 @@
                     initTests();
                     var tests = config.tests;
                     var name = config.name;
-                    if (recyclingEnabled) {
-                        name += "+r";
-                    }
-                    if (scuSupported && !config.disableSCU) {
-                        name += "+s";
-                    }
-                    if (config.fullRenderTime) {
-                        name += "+f";
-                    }
-                    if (config.disableChecks) {
-                        name += "+d";
-                    }
                     filter = filter || config.filter;
                     if (tests && filter) {
                         tests = tests.filter(function (t) { return t.name.indexOf(filter) !== -1; });
@@ -940,8 +929,15 @@
                                     "data": {
                                         "name": name,
                                         "version": config.version,
-                                        "timings": timings,
+                                        "flags": {
+                                            "fullRenderTime": config.fullRenderTime,
+                                            "scu": scuSupported && !config.disableSCU,
+                                            "recycling": recyclingEnabled,
+                                            "disableChecks": config.disableChecks,
+                                        },
+                                        "times": times,
                                         "memory": memory,
+                                        "iterations": config.iterations,
                                         "samples": samples,
                                     },
                                 }, "*");
@@ -966,7 +962,7 @@
             });
         });
     }
-    timings.start = performance.now();
+    times.start = performance.now();
 
     exports.config = config;
     exports.init = init;
