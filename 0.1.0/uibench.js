@@ -908,18 +908,6 @@
                     initTests();
                     var tests = config.tests;
                     var name = config.name;
-                    if (recyclingEnabled) {
-                        name += "+r";
-                    }
-                    if (scuSupported && !config.disableSCU) {
-                        name += "+s";
-                    }
-                    if (config.fullRenderTime) {
-                        name += "+f";
-                    }
-                    if (config.disableChecks) {
-                        name += "+d";
-                    }
                     filter = filter || config.filter;
                     if (tests && filter) {
                         tests = tests.filter(function (t) { return t.name.indexOf(filter) !== -1; });
@@ -940,8 +928,15 @@
                                     "data": {
                                         "name": name,
                                         "version": config.version,
+                                        "flags": {
+                                            "fullRenderTime": config.fullRenderTime,
+                                            "scu": scuSupported && !config.disableSCU,
+                                            "recycling": recyclingEnabled,
+                                            "disableChecks": config.disableChecks,
+                                        },
                                         "timings": timings,
                                         "memory": memory,
+                                        "iterations": config.iterations,
                                         "samples": samples,
                                     },
                                 }, "*");
