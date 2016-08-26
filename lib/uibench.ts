@@ -186,6 +186,7 @@ function initTests() {
     let tree50   = treeCreate(initialTree, [50]);
     let tree5_10 = treeCreate(initialTree, [5, 10]);
     let tree10_5 = treeCreate(initialTree, [10, 5]);
+    let tree10_10_10_2 = treeCreate(initialTree, [10, 10, 10, 2]);
 
     if (config.disableSCU) {
       table30_4 = table30_4.clone();
@@ -339,6 +340,9 @@ function initTests() {
       // special use case that should trigger worst case scenario for virtual-dom library
       testCase("tree/[50]/[virtual_dom_worst_case]", tree50,
         scuClone(treeTransform(tree50, [moveFromStartToEnd(2)]))),
+
+      // test case with large amount of vnodes to test diff overhead
+      testCase("tree/[10,10,10,2]/no_change", tree10_10_10_2, scuClone(tree10_10_10_2)),
     ];
   } else {
     let table100_4 = tableCreate(initialTable, 100, 4);
@@ -350,6 +354,7 @@ function initTests() {
     let tree50_10 = treeCreate(initialTree, [50, 10]);
     let tree10_50 = treeCreate(initialTree, [10, 50]);
     let tree5_100 = treeCreate(initialTree, [5, 100]);
+    let tree10_10_10_10 = treeCreate(initialTree, [10, 10, 10, 10]);
 
     if (config.disableSCU) {
       table100_4 = table100_4.clone();
@@ -523,6 +528,9 @@ function initTests() {
       // special use case that should trigger worst case scenario for virtual-dom library
       testCase("tree/[500]/[virtual_dom_worst_case]", tree500,
         scuClone(treeTransform(tree500, [moveFromStartToEnd(2)]))),
+
+      // test case with large amount of vnodes to test diff overhead
+      testCase("tree/[10,10,10,10]/no_change", tree10_10_10_10, scuClone(tree10_10_10_10)),
     ];
   }
 }
