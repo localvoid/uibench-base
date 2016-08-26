@@ -404,6 +404,20 @@
             onFinish(result);
         });
     }
+    function preserveStateTest(onUpdate, onFinish) {
+        var initialState = new AppState("tree", new HomeState(), TableState.create(0, 0), AnimState.create(0), TreeState.create([2]));
+        var toState = treeTransform(initialState, [reverse]);
+        onUpdate(initialState, "init");
+        var state = "uibench_" + Math.random();
+        var treeLeafs = document.getElementsByClassName("TreeLeaf");
+        treeLeafs[0]._uibenchState = state;
+        onUpdate(toState, "update");
+        treeLeafs = document.getElementsByClassName("TreeLeaf");
+        var result = (treeLeafs[1]._uibenchState === state);
+        window.requestAnimationFrame(function () {
+            onFinish(result);
+        });
+    }
 
     // performance.now() polyfill
     // https://gist.github.com/paulirish/5438650
@@ -906,58 +920,61 @@
             }
             scuTest(onUpdate, function (scuSupported) {
                 recyclingTest(onUpdate, function (recyclingEnabled) {
-                    initTests();
-                    var tests = config.tests;
-                    var name = config.name;
-                    filter = filter || config.filter;
-                    if (tests && filter) {
-                        tests = tests.filter(function (t) { return t.name.indexOf(filter) !== -1; });
-                    }
-                    var progressBar = document.createElement("div");
-                    progressBar.className = "ProgressBar";
-                    var progressBarInner = document.createElement("div");
-                    progressBarInner.className = "ProgressBar_inner";
-                    progressBarInner.style.width = "0";
-                    document.body.appendChild(progressBar);
-                    progressBar.appendChild(progressBarInner);
-                    function run() {
-                        var e = new Executor(config.iterations, tests, onUpdate, function (samples) {
-                            onFinish(samples);
-                            if (config.report) {
-                                window.opener.postMessage({
-                                    "type": "report",
-                                    "data": {
-                                        "name": name,
-                                        "version": config.version,
-                                        "flags": {
-                                            "fullRenderTime": config.fullRenderTime,
-                                            "scu": scuSupported && !config.disableSCU,
-                                            "recycling": recyclingEnabled,
-                                            "disableChecks": config.disableChecks,
+                    preserveStateTest(onUpdate, function (preserveState) {
+                        initTests();
+                        var tests = config.tests;
+                        var name = config.name;
+                        filter = filter || config.filter;
+                        if (tests && filter) {
+                            tests = tests.filter(function (t) { return t.name.indexOf(filter) !== -1; });
+                        }
+                        var progressBar = document.createElement("div");
+                        progressBar.className = "ProgressBar";
+                        var progressBarInner = document.createElement("div");
+                        progressBarInner.className = "ProgressBar_inner";
+                        progressBarInner.style.width = "0";
+                        document.body.appendChild(progressBar);
+                        progressBar.appendChild(progressBarInner);
+                        function run() {
+                            var e = new Executor(config.iterations, tests, onUpdate, function (samples) {
+                                onFinish(samples);
+                                if (config.report) {
+                                    window.opener.postMessage({
+                                        "type": "report",
+                                        "data": {
+                                            "name": name,
+                                            "version": config.version,
+                                            "flags": {
+                                                "fullRenderTime": config.fullRenderTime,
+                                                "preserveState": preserveState,
+                                                "scu": scuSupported && !config.disableSCU,
+                                                "recycling": recyclingEnabled,
+                                                "disableChecks": config.disableChecks,
+                                            },
+                                            "times": times,
+                                            "memory": memory,
+                                            "iterations": config.iterations,
+                                            "samples": samples,
                                         },
-                                        "times": times,
-                                        "memory": memory,
-                                        "iterations": config.iterations,
-                                        "samples": samples,
-                                    },
-                                }, "*");
+                                    }, "*");
+                                }
+                            }, function (progress) {
+                                progressBarInner.style.width = Math.round(progress * 100) + "%";
+                            });
+                            e.run();
+                        }
+                        if (tests) {
+                            if (config.startDelay > 0) {
+                                setTimeout(run, config.startDelay);
                             }
-                        }, function (progress) {
-                            progressBarInner.style.width = Math.round(progress * 100) + "%";
-                        });
-                        e.run();
-                    }
-                    if (tests) {
-                        if (config.startDelay > 0) {
-                            setTimeout(run, config.startDelay);
+                            else {
+                                run();
+                            }
                         }
                         else {
-                            run();
+                            onFinish({});
                         }
-                    }
-                    else {
-                        onFinish({});
-                    }
+                    });
                 });
             });
         });
