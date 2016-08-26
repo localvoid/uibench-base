@@ -452,6 +452,7 @@
         firstRender: 0,
     };
     var memory = {
+        initial: performance.memory === undefined ? 0 : performance.memory.usedJSHeapSize,
         start: 0,
         max: 0,
     };
@@ -812,7 +813,7 @@
                     }
                     _this.onUpdate(group.from, "init");
                     _this._state = "update";
-                    if (memory.start !== 0) {
+                    if (memory.initial !== 0) {
                         memory.max = Math.max(memory.max, performance.memory.usedJSHeapSize);
                     }
                     requestAnimationFrame(_this._next);
@@ -896,7 +897,7 @@
     }
     function run(onUpdate, onFinish, filter) {
         timings.run = performance.now();
-        if (performance.memory !== undefined) {
+        if (memory.initial !== 0) {
             memory.start = performance.memory.usedJSHeapSize;
         }
         firstRenderTime(onUpdate, function () {
