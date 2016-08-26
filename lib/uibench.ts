@@ -3,7 +3,7 @@ import {animAdvanceEach, switchTo, tableCreate, treeCreate, tableSortBy, tableFi
   treeTransform} from "./actions";
 import {reverse, insertFirst, insertLast, removeFirst, removeLast, moveFromEndToStart,
   moveFromStartToEnd, snabbdomWorstCase} from "./tree_transformers";
-import {specTest, scuTest, recyclingTest} from "./tests";
+import {specTest, scuTest, recyclingTest, preserveStateTest} from "./tests";
 
 declare global {
   interface Console {
@@ -679,63 +679,66 @@ export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: s
     }
     scuTest(onUpdate, (scuSupported) => {
       recyclingTest(onUpdate, (recyclingEnabled) => {
-        initTests();
-        let tests = config.tests;
-        let name = config.name;
+        preserveStateTest(onUpdate, (preserveState) => {
+          initTests();
+          let tests = config.tests;
+          let name = config.name;
 
-        filter = filter || config.filter;
+          filter = filter || config.filter;
 
-        if (tests && filter) {
-          tests = tests.filter((t) => t.name.indexOf(filter as string) !== -1);
-        }
-
-        const progressBar = document.createElement("div");
-        progressBar.className = "ProgressBar";
-        const progressBarInner = document.createElement("div");
-        progressBarInner.className = "ProgressBar_inner";
-        progressBarInner.style.width = "0";
-        document.body.appendChild(progressBar);
-        progressBar.appendChild(progressBarInner);
-
-        function run() {
-          const e = new Executor(config.iterations, tests as TestCase[], onUpdate,
-            (samples) => {
-              onFinish(samples);
-              if (config.report) {
-                window.opener.postMessage({
-                  "type": "report",
-                  "data": {
-                    "name": name,
-                    "version": config.version,
-                    "flags": {
-                      "fullRenderTime": config.fullRenderTime,
-                      "scu": scuSupported && !config.disableSCU,
-                      "recycling": recyclingEnabled,
-                      "disableChecks": config.disableChecks,
-                    },
-                    "times": times,
-                    "memory": memory,
-                    "iterations": config.iterations,
-                    "samples": samples,
-                  },
-                }, "*");
-              }
-            },
-            (progress) => {
-              progressBarInner.style.width = `${Math.round(progress * 100)}%`;
-            });
-          e.run();
-        }
-
-        if (tests) {
-          if (config.startDelay > 0) {
-            setTimeout(run, config.startDelay);
-          } else {
-            run();
+          if (tests && filter) {
+            tests = tests.filter((t) => t.name.indexOf(filter as string) !== -1);
           }
-        } else {
-          onFinish({});
-        }
+
+          const progressBar = document.createElement("div");
+          progressBar.className = "ProgressBar";
+          const progressBarInner = document.createElement("div");
+          progressBarInner.className = "ProgressBar_inner";
+          progressBarInner.style.width = "0";
+          document.body.appendChild(progressBar);
+          progressBar.appendChild(progressBarInner);
+
+          function run() {
+            const e = new Executor(config.iterations, tests as TestCase[], onUpdate,
+              (samples) => {
+                onFinish(samples);
+                if (config.report) {
+                  window.opener.postMessage({
+                    "type": "report",
+                    "data": {
+                      "name": name,
+                      "version": config.version,
+                      "flags": {
+                        "fullRenderTime": config.fullRenderTime,
+                        "preserveState": preserveState,
+                        "scu": scuSupported && !config.disableSCU,
+                        "recycling": recyclingEnabled,
+                        "disableChecks": config.disableChecks,
+                      },
+                      "times": times,
+                      "memory": memory,
+                      "iterations": config.iterations,
+                      "samples": samples,
+                    },
+                  }, "*");
+                }
+              },
+              (progress) => {
+                progressBarInner.style.width = `${Math.round(progress * 100)}%`;
+              });
+            e.run();
+          }
+
+          if (tests) {
+            if (config.startDelay > 0) {
+              setTimeout(run, config.startDelay);
+            } else {
+              run();
+            }
+          } else {
+            onFinish({});
+          }
+        });
       });
     });
   });

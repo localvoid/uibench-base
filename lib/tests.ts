@@ -1,6 +1,7 @@
 import {UpdateHandler} from "./uibench";
 import {AppState, HomeState, TableState, AnimState, TreeState} from "./state";
-import {animAdvanceEach, treeCreate} from "./actions";
+import {animAdvanceEach, treeCreate, treeTransform} from "./actions";
+import {reverse} from "./tree_transformers";
 
 function tableTests(onUpdate: UpdateHandler): void {
   const state = new AppState(
@@ -203,6 +204,31 @@ export function recyclingTest(onUpdate: UpdateHandler, onFinish: (recyclingEnabl
     throw new Error("recycling test failed");
   }
   const result = (a === b);
+
+  window.requestAnimationFrame(() => {
+    onFinish(result);
+  });
+}
+
+export function preserveStateTest(onUpdate: UpdateHandler, onFinish: (preserveState: boolean) => void): void {
+  const initialState = new AppState(
+    "tree",
+    new HomeState(),
+    TableState.create(0, 0),
+    AnimState.create(0),
+    TreeState.create([2]));
+  const toState = treeTransform(initialState, [reverse]);
+
+  onUpdate(initialState, "init");
+
+  const state = "uibench_" + Math.random();
+  let treeLeafs = document.getElementsByClassName("TreeLeaf");
+  (treeLeafs[0] as any)._uibenchState = state;
+
+  onUpdate(toState, "update");
+
+  treeLeafs = document.getElementsByClassName("TreeLeaf");
+  const result = ((treeLeafs[1] as any)._uibenchState === state);
 
   window.requestAnimationFrame(() => {
     onFinish(result);
