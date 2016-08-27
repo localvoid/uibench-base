@@ -1,15 +1,15 @@
 import {UpdateHandler} from "./uibench";
 import {AppState, HomeState, TableState, AnimState, TreeState} from "./state";
-import {animAdvanceEach, treeCreate, treeTransform} from "./actions";
+import {animAdvanceEach, treeCreate, tableFilterBy, tableActivateEach, treeTransform} from "./actions";
 import {reverse} from "./tree_transformers";
 
 function tableTests(onUpdate: UpdateHandler): void {
-  const state = new AppState(
+  const state = tableActivateEach(new AppState(
     "table",
     new HomeState(),
     TableState.create(2, 2),
     AnimState.create(0),
-    TreeState.create([0]));
+    TreeState.create([0])), 2);
 
   state.table.items[0].id = 300;
   state.table.items[1].id = 301;
@@ -27,6 +27,9 @@ function tableTests(onUpdate: UpdateHandler): void {
   }
   if (rows[0].getAttribute("data-id") !== "300") {
     throw new Error("Spec test failed: invalid data-id attribute in the TableRow");
+  }
+  if (rows[1].className.indexOf("active") === -1) {
+    throw new Error("Spec test failed: TableRow should have active className when it is activated");
   }
 
   const cells = document.getElementsByClassName("TableCell");
@@ -80,10 +83,10 @@ function animTests(onUpdate: UpdateHandler): void {
   if (boxes[0].getAttribute("data-id") !== "100") {
     throw new Error("Spec test failed: invalid data-id attribute in the AnimBox");
   }
-  if ((boxes[0] as HTMLElement).style.borderRadius !== "1px") {
+  if ((boxes[0] as HTMLElement).style.borderRadius !== "0px") {
     throw new Error("Spec test failed: invalid borderRadius style in the AnimBox");
   }
-  if ((boxes[1] as HTMLElement).style.borderRadius !== "0px") {
+  if ((boxes[1] as HTMLElement).style.borderRadius !== "1px") {
     throw new Error("Spec test failed: invalid borderRadius style in the AnimBox");
   }
   if (!(boxes[0] as HTMLElement).style.background) {
@@ -211,24 +214,44 @@ export function recyclingTest(onUpdate: UpdateHandler, onFinish: (recyclingEnabl
 }
 
 export function preserveStateTest(onUpdate: UpdateHandler, onFinish: (preserveState: boolean) => void): void {
-  const initialState = new AppState(
+  const state = "uibench_" + Math.random();
+
+  // Check tables
+  const tableInit = new AppState(
+    "table",
+    new HomeState(),
+    TableState.create(3, 1),
+    AnimState.create(0),
+    TreeState.create([0]));
+  const tableUpdate = tableFilterBy(tableInit, 2);
+
+  onUpdate(tableInit, "init");
+  let tableRows = document.getElementsByClassName("TableRow");
+  (tableRows[2] as any)._uibenchState = state;
+
+  onUpdate(tableUpdate, "init");
+
+  tableRows = document.getElementsByClassName("TableRow");
+  let result = (tableRows[1] as any)._uibenchState === state;
+
+  // Check trees
+  const treeInit = new AppState(
     "tree",
     new HomeState(),
     TableState.create(0, 0),
     AnimState.create(0),
     TreeState.create([2]));
-  const toState = treeTransform(initialState, [reverse]);
+  const treeUpdate = treeTransform(treeInit, [reverse]);
 
-  onUpdate(initialState, "init");
+  onUpdate(treeInit, "init");
 
-  const state = "uibench_" + Math.random();
   let treeLeafs = document.getElementsByClassName("TreeLeaf");
   (treeLeafs[0] as any)._uibenchState = state;
 
-  onUpdate(toState, "update");
+  onUpdate(treeUpdate, "update");
 
   treeLeafs = document.getElementsByClassName("TreeLeaf");
-  const result = ((treeLeafs[1] as any)._uibenchState === state);
+  result = result && ((treeLeafs[1] as any)._uibenchState === state);
 
   window.requestAnimationFrame(() => {
     onFinish(result);

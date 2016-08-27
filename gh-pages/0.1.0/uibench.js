@@ -160,7 +160,7 @@
         return new AppState(state.location, state.home, TableState.create(rows, cols), state.anim, state.tree);
     }
     function tableFilterBy(state, nth) {
-        return new AppState(state.location, state.home, new TableState(state.table.items.filter(function (item, i) { return !(i % nth); })), state.anim, state.tree);
+        return new AppState(state.location, state.home, new TableState(state.table.items.filter(function (item, i) { return (i + 1) % nth; })), state.anim, state.tree);
     }
     function tableSortBy(state, i) {
         var newItems = state.table.items.slice();
@@ -168,10 +168,12 @@
         return new AppState(state.location, state.home, new TableState(newItems), state.anim, state.tree);
     }
     function tableActivateEach(state, nth) {
-        return new AppState(state.location, state.home, new TableState(state.table.items.map(function (item, i) { return i % nth ? item : new TableItemState(item.id, true, item.props); })), state.anim, state.tree);
+        return new AppState(state.location, state.home, new TableState(state.table.items.map(function (item, i) { return (i + 1) % nth ?
+            item :
+            new TableItemState(item.id, true, item.props); })), state.anim, state.tree);
     }
     function animAdvanceEach(state, nth) {
-        return new AppState(state.location, state.home, state.table, new AnimState(state.anim.items.map(function (item, i) { return i % nth ? item : new AnimBoxState(item.id, item.time + 1); })), state.tree);
+        return new AppState(state.location, state.home, state.table, new AnimState(state.anim.items.map(function (item, i) { return (i + 1) % nth ? item : new AnimBoxState(item.id, item.time + 1); })), state.tree);
     }
     function treeCreate(state, hierarchy) {
         return new AppState(state.location, state.home, state.table, state.anim, TreeState.create(hierarchy));
@@ -259,7 +261,7 @@
     }
 
     function tableTests(onUpdate) {
-        var state = new AppState("table", new HomeState(), TableState.create(2, 2), AnimState.create(0), TreeState.create([0]));
+        var state = tableActivateEach(new AppState("table", new HomeState(), TableState.create(2, 2), AnimState.create(0), TreeState.create([0])), 2);
         state.table.items[0].id = 300;
         state.table.items[1].id = 301;
         onUpdate(state, "update");
@@ -273,6 +275,9 @@
         }
         if (rows[0].getAttribute("data-id") !== "300") {
             throw new Error("Spec test failed: invalid data-id attribute in the TableRow");
+        }
+        if (rows[1].className.indexOf("active") === -1) {
+            throw new Error("Spec test failed: TableRow should have active className when it is activated");
         }
         var cells = document.getElementsByClassName("TableCell");
         if (cells.length !== 6) {
@@ -315,10 +320,10 @@
         if (boxes[0].getAttribute("data-id") !== "100") {
             throw new Error("Spec test failed: invalid data-id attribute in the AnimBox");
         }
-        if (boxes[0].style.borderRadius !== "1px") {
+        if (boxes[0].style.borderRadius !== "0px") {
             throw new Error("Spec test failed: invalid borderRadius style in the AnimBox");
         }
-        if (boxes[1].style.borderRadius !== "0px") {
+        if (boxes[1].style.borderRadius !== "1px") {
             throw new Error("Spec test failed: invalid borderRadius style in the AnimBox");
         }
         if (!boxes[0].style.background) {
@@ -405,15 +410,25 @@
         });
     }
     function preserveStateTest(onUpdate, onFinish) {
-        var initialState = new AppState("tree", new HomeState(), TableState.create(0, 0), AnimState.create(0), TreeState.create([2]));
-        var toState = treeTransform(initialState, [reverse]);
-        onUpdate(initialState, "init");
         var state = "uibench_" + Math.random();
+        // Check tables
+        var tableInit = new AppState("table", new HomeState(), TableState.create(3, 1), AnimState.create(0), TreeState.create([0]));
+        var tableUpdate = tableFilterBy(tableInit, 2);
+        onUpdate(tableInit, "init");
+        var tableRows = document.getElementsByClassName("TableRow");
+        tableRows[2]._uibenchState = state;
+        onUpdate(tableUpdate, "init");
+        tableRows = document.getElementsByClassName("TableRow");
+        var result = tableRows[1]._uibenchState === state;
+        // Check trees
+        var treeInit = new AppState("tree", new HomeState(), TableState.create(0, 0), AnimState.create(0), TreeState.create([2]));
+        var treeUpdate = treeTransform(treeInit, [reverse]);
+        onUpdate(treeInit, "init");
         var treeLeafs = document.getElementsByClassName("TreeLeaf");
         treeLeafs[0]._uibenchState = state;
-        onUpdate(toState, "update");
+        onUpdate(treeUpdate, "update");
         treeLeafs = document.getElementsByClassName("TreeLeaf");
-        var result = (treeLeafs[1]._uibenchState === state);
+        result = result && (treeLeafs[1]._uibenchState === state);
         window.requestAnimationFrame(function () {
             onFinish(result);
         });
@@ -460,7 +475,7 @@
         disableChecks: false,
         startDelay: 0,
     };
-    var times = {
+    var timing = {
         start: 0,
         run: 0,
         firstRender: 0,
@@ -553,6 +568,7 @@
             var tree5_10 = treeCreate(initialTree, [5, 10]);
             var tree10_5 = treeCreate(initialTree, [10, 5]);
             var tree10_10_10_2 = treeCreate(initialTree, [10, 10, 10, 2]);
+            var tree2__9 = treeCreate(initialTree, [2, 2, 2, 2, 2, 2, 2, 2, 2]);
             if (config.disableSCU) {
                 table30_4 = table30_4.clone();
                 table15_4 = table15_4.clone();
@@ -630,9 +646,11 @@
                 testCase("tree/[50]/render", initialTree, scuClone(tree50)),
                 testCase("tree/[5,10]/render", initialTree, scuClone(tree5_10)),
                 testCase("tree/[10,5]/render", initialTree, scuClone(tree10_5)),
+                testCase("tree/[2,2,2,2,2,2,2,2,2]/render", initialTree, scuClone(tree2__9)),
                 testCase("tree/[50]/removeAll", tree50, scuClone(initialTree)),
                 testCase("tree/[5,10]/removeAll", tree5_10, scuClone(initialTree)),
                 testCase("tree/[10,5]/removeAll", tree10_5, scuClone(initialTree)),
+                testCase("tree/[2,2,2,2,2,2,2,2,2]/removeAll", tree2__9, scuClone(initialTree)),
                 testCase("tree/[50]/[reverse]", tree50, scuClone(treeTransform(tree50, [reverse]))),
                 testCase("tree/[5,10]/[reverse]", tree5_10, scuClone(treeTransform(tree5_10, [reverse]))),
                 testCase("tree/[10,5]/[reverse]", tree10_5, scuClone(treeTransform(tree10_5, [reverse]))),
@@ -664,6 +682,7 @@
                 testCase("tree/[50]/[virtual_dom_worst_case]", tree50, scuClone(treeTransform(tree50, [moveFromStartToEnd(2)]))),
                 // test case with large amount of vnodes to test diff overhead
                 testCase("tree/[10,10,10,2]/no_change", tree10_10_10_2, scuClone(tree10_10_10_2)),
+                testCase("tree/[2,2,2,2,2,2,2,2]/no_change", tree2__9, scuClone(tree2__9)),
             ];
         }
         else {
@@ -675,7 +694,8 @@
             var tree50_10 = treeCreate(initialTree, [50, 10]);
             var tree10_50 = treeCreate(initialTree, [10, 50]);
             var tree5_100 = treeCreate(initialTree, [5, 100]);
-            var tree10_10_10_10 = treeCreate(initialTree, [10, 10, 10, 10]);
+            var tree10__4 = treeCreate(initialTree, [10, 10, 10, 10]);
+            var tree2__10 = treeCreate(initialTree, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]);
             if (config.disableSCU) {
                 table100_4 = table100_4.clone();
                 table50_4 = table50_4.clone();
@@ -761,10 +781,12 @@
                 testCase("tree/[50,10]/render", initialTree, scuClone(tree50_10)),
                 testCase("tree/[10,50]/render", initialTree, scuClone(tree10_50)),
                 testCase("tree/[5,100]/render", initialTree, scuClone(tree5_100)),
+                testCase("tree/[2,2,2,2,2,2,2,2,2,2]/render", initialTree, scuClone(tree2__10)),
                 testCase("tree/[500]/removeAll", tree500, scuClone(initialTree)),
                 testCase("tree/[50,10]/removeAll", tree50_10, scuClone(initialTree)),
                 testCase("tree/[10,50]/removeAll", tree10_50, scuClone(initialTree)),
                 testCase("tree/[5,100]/removeAll", tree5_100, scuClone(initialTree)),
+                testCase("tree/[2,2,2,2,2,2,2,2,2,2]/removeAll", tree2__10, scuClone(initialTree)),
                 testCase("tree/[500]/[reverse]", tree500, scuClone(treeTransform(tree500, [reverse]))),
                 testCase("tree/[50,10]/[reverse]", tree50_10, scuClone(treeTransform(tree50_10, [reverse]))),
                 testCase("tree/[10,50]/[reverse]", tree10_50, scuClone(treeTransform(tree10_50, [reverse]))),
@@ -802,7 +824,8 @@
                 // special use case that should trigger worst case scenario for virtual-dom library
                 testCase("tree/[500]/[virtual_dom_worst_case]", tree500, scuClone(treeTransform(tree500, [moveFromStartToEnd(2)]))),
                 // test case with large amount of vnodes to test diff overhead
-                testCase("tree/[10,10,10,10]/no_change", tree10_10_10_10, scuClone(tree10_10_10_10)),
+                testCase("tree/[10,10,10,10]/no_change", tree10__4, scuClone(tree10__4)),
+                testCase("tree/[2,2,2,2,2,2,2,2,2,2]/no_change", tree2__10, scuClone(tree2__10)),
             ];
         }
     }
@@ -905,7 +928,7 @@
         var t = performance.now();
         onUpdate(state, "init");
         function finish() {
-            times.firstRender = performance.now() - t;
+            timing.firstRender = performance.now() - t;
             done();
         }
         if (config.fullRenderTime) {
@@ -916,7 +939,7 @@
         }
     }
     function run(onUpdate, onFinish, filter) {
-        times.run = performance.now();
+        timing.run = performance.now();
         if (memory.initial !== 0) {
             memory.start = performance.memory.usedJSHeapSize;
         }
@@ -957,7 +980,7 @@
                                                 "recycling": recyclingEnabled,
                                                 "disableChecks": config.disableChecks,
                                             },
-                                            "times": times,
+                                            "timing": timing,
                                             "memory": memory,
                                             "iterations": config.iterations,
                                             "samples": samples,
@@ -985,7 +1008,7 @@
             });
         });
     }
-    times.start = performance.now();
+    timing.start = performance.now();
 
     exports.config = config;
     exports.init = init;

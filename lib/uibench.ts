@@ -79,7 +79,7 @@ export const config = {
   startDelay: 0,
 } as Config;
 
-const times = {
+const timing = {
   start: 0,
   run: 0,
   firstRender: 0,
@@ -187,6 +187,7 @@ function initTests() {
     let tree5_10 = treeCreate(initialTree, [5, 10]);
     let tree10_5 = treeCreate(initialTree, [10, 5]);
     let tree10_10_10_2 = treeCreate(initialTree, [10, 10, 10, 2]);
+    let tree2__9 = treeCreate(initialTree, [2, 2, 2, 2, 2, 2, 2, 2, 2]);
 
     if (config.disableSCU) {
       table30_4 = table30_4.clone();
@@ -283,10 +284,12 @@ function initTests() {
       testCase("tree/[50]/render", initialTree, scuClone(tree50)),
       testCase("tree/[5,10]/render", initialTree, scuClone(tree5_10)),
       testCase("tree/[10,5]/render", initialTree, scuClone(tree10_5)),
+      testCase("tree/[2,2,2,2,2,2,2,2,2]/render", initialTree, scuClone(tree2__9)),
 
       testCase("tree/[50]/removeAll", tree50, scuClone(initialTree)),
       testCase("tree/[5,10]/removeAll", tree5_10, scuClone(initialTree)),
       testCase("tree/[10,5]/removeAll", tree10_5, scuClone(initialTree)),
+      testCase("tree/[2,2,2,2,2,2,2,2,2]/removeAll", tree2__9, scuClone(initialTree)),
 
       testCase("tree/[50]/[reverse]", tree50, scuClone(treeTransform(tree50, [reverse]))),
       testCase("tree/[5,10]/[reverse]", tree5_10, scuClone(treeTransform(tree5_10, [reverse]))),
@@ -343,6 +346,8 @@ function initTests() {
 
       // test case with large amount of vnodes to test diff overhead
       testCase("tree/[10,10,10,2]/no_change", tree10_10_10_2, scuClone(tree10_10_10_2)),
+
+      testCase("tree/[2,2,2,2,2,2,2,2]/no_change", tree2__9, scuClone(tree2__9)),
     ];
   } else {
     let table100_4 = tableCreate(initialTable, 100, 4);
@@ -354,7 +359,8 @@ function initTests() {
     let tree50_10 = treeCreate(initialTree, [50, 10]);
     let tree10_50 = treeCreate(initialTree, [10, 50]);
     let tree5_100 = treeCreate(initialTree, [5, 100]);
-    let tree10_10_10_10 = treeCreate(initialTree, [10, 10, 10, 10]);
+    let tree10__4 = treeCreate(initialTree, [10, 10, 10, 10]);
+    let tree2__10 = treeCreate(initialTree, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]);
 
     if (config.disableSCU) {
       table100_4 = table100_4.clone();
@@ -461,11 +467,13 @@ function initTests() {
       testCase("tree/[50,10]/render", initialTree, scuClone(tree50_10)),
       testCase("tree/[10,50]/render", initialTree, scuClone(tree10_50)),
       testCase("tree/[5,100]/render", initialTree, scuClone(tree5_100)),
+      testCase("tree/[2,2,2,2,2,2,2,2,2,2]/render", initialTree, scuClone(tree2__10)),
 
       testCase("tree/[500]/removeAll", tree500, scuClone(initialTree)),
       testCase("tree/[50,10]/removeAll", tree50_10, scuClone(initialTree)),
       testCase("tree/[10,50]/removeAll", tree10_50, scuClone(initialTree)),
       testCase("tree/[5,100]/removeAll", tree5_100, scuClone(initialTree)),
+      testCase("tree/[2,2,2,2,2,2,2,2,2,2]/removeAll", tree2__10, scuClone(initialTree)),
 
       testCase("tree/[500]/[reverse]", tree500, scuClone(treeTransform(tree500, [reverse]))),
       testCase("tree/[50,10]/[reverse]", tree50_10, scuClone(treeTransform(tree50_10, [reverse]))),
@@ -530,7 +538,8 @@ function initTests() {
         scuClone(treeTransform(tree500, [moveFromStartToEnd(2)]))),
 
       // test case with large amount of vnodes to test diff overhead
-      testCase("tree/[10,10,10,10]/no_change", tree10_10_10_10, scuClone(tree10_10_10_10)),
+      testCase("tree/[10,10,10,10]/no_change", tree10__4, scuClone(tree10__4)),
+      testCase("tree/[2,2,2,2,2,2,2,2,2,2]/no_change", tree2__10, scuClone(tree2__10)),
     ];
   }
 }
@@ -664,7 +673,7 @@ function firstRenderTime(onUpdate: UpdateHandler, done: () => void): void {
   onUpdate(state, "init");
 
   function finish() {
-    times.firstRender = performance.now() - t;
+    timing.firstRender = performance.now() - t;
     done();
   }
 
@@ -676,7 +685,7 @@ function firstRenderTime(onUpdate: UpdateHandler, done: () => void): void {
 }
 
 export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: string | null): void {
-  times.run = performance.now();
+  timing.run = performance.now();
   if (memory.initial !== 0) {
     memory.start = performance.memory.usedJSHeapSize;
   }
@@ -723,7 +732,7 @@ export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: s
                         "recycling": recyclingEnabled,
                         "disableChecks": config.disableChecks,
                       },
-                      "times": times,
+                      "timing": timing,
                       "memory": memory,
                       "iterations": config.iterations,
                       "samples": samples,
@@ -752,4 +761,4 @@ export function run(onUpdate: UpdateHandler, onFinish: FinishHandler, filter?: s
   });
 }
 
-times.start = performance.now();
+timing.start = performance.now();

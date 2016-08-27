@@ -29,7 +29,7 @@ export function tableFilterBy(state: AppState, nth: number): AppState {
   return new AppState(
     state.location,
     state.home,
-    new TableState(state.table.items.filter((item, i) => !(i % nth))),
+    new TableState(state.table.items.filter((item, i) => (i + 1) % nth)),
     state.anim,
     state.tree
   );
@@ -52,7 +52,9 @@ export function tableActivateEach(state: AppState, nth: number): AppState {
   return new AppState(
     state.location,
     state.home,
-    new TableState(state.table.items.map((item, i) => i % nth ? item : new TableItemState(item.id, true, item.props))),
+    new TableState(state.table.items.map((item, i) => (i + 1) % nth ?
+      item :
+      new TableItemState(item.id, true, item.props))),
     state.anim,
     state.tree
   );
@@ -63,7 +65,7 @@ export function animAdvanceEach(state: AppState, nth: number): AppState {
     state.location,
     state.home,
     state.table,
-    new AnimState(state.anim.items.map((item, i) => i % nth ? item : new AnimBoxState(item.id, item.time + 1))),
+    new AnimState(state.anim.items.map((item, i) => (i + 1) % nth ? item : new AnimBoxState(item.id, item.time + 1))),
     state.tree
   );
 }
