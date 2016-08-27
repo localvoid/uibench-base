@@ -565,6 +565,7 @@
             var tree5_10 = treeCreate(initialTree, [5, 10]);
             var tree10_5 = treeCreate(initialTree, [10, 5]);
             var tree10_10_10_2 = treeCreate(initialTree, [10, 10, 10, 2]);
+            var tree2__9 = treeCreate(initialTree, [2, 2, 2, 2, 2, 2, 2, 2, 2]);
             if (config.disableSCU) {
                 table30_4 = table30_4.clone();
                 table15_4 = table15_4.clone();
@@ -676,6 +677,7 @@
                 testCase("tree/[50]/[virtual_dom_worst_case]", tree50, scuClone(treeTransform(tree50, [moveFromStartToEnd(2)]))),
                 // test case with large amount of vnodes to test diff overhead
                 testCase("tree/[10,10,10,2]/no_change", tree10_10_10_2, scuClone(tree10_10_10_2)),
+                testCase("tree/[2,2,2,2,2,2,2,2]/no_change", tree2__9, scuClone(tree2__9)),
             ];
         }
         else {
@@ -687,7 +689,8 @@
             var tree50_10 = treeCreate(initialTree, [50, 10]);
             var tree10_50 = treeCreate(initialTree, [10, 50]);
             var tree5_100 = treeCreate(initialTree, [5, 100]);
-            var tree10_10_10_10 = treeCreate(initialTree, [10, 10, 10, 10]);
+            var tree10__4 = treeCreate(initialTree, [10, 10, 10, 10]);
+            var tree2__10 = treeCreate(initialTree, [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]);
             if (config.disableSCU) {
                 table100_4 = table100_4.clone();
                 table50_4 = table50_4.clone();
@@ -814,7 +817,8 @@
                 // special use case that should trigger worst case scenario for virtual-dom library
                 testCase("tree/[500]/[virtual_dom_worst_case]", tree500, scuClone(treeTransform(tree500, [moveFromStartToEnd(2)]))),
                 // test case with large amount of vnodes to test diff overhead
-                testCase("tree/[10,10,10,10]/no_change", tree10_10_10_10, scuClone(tree10_10_10_10)),
+                testCase("tree/[10,10,10,10]/no_change", tree10__4, scuClone(tree10__4)),
+                testCase("tree/[2,2,2,2,2,2,2,2,2,2]/no_change", tree2__10, scuClone(tree2__10)),
             ];
         }
     }
