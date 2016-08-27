@@ -317,10 +317,10 @@
         if (boxes[0].getAttribute("data-id") !== "100") {
             throw new Error("Spec test failed: invalid data-id attribute in the AnimBox");
         }
-        if (boxes[0].style.borderRadius !== "1px") {
+        if (boxes[0].style.borderRadius === "0px") {
             throw new Error("Spec test failed: invalid borderRadius style in the AnimBox");
         }
-        if (boxes[1].style.borderRadius !== "0px") {
+        if (boxes[1].style.borderRadius === "1px") {
             throw new Error("Spec test failed: invalid borderRadius style in the AnimBox");
         }
         if (!boxes[0].style.background) {
