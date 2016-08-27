@@ -405,15 +405,25 @@
         });
     }
     function preserveStateTest(onUpdate, onFinish) {
-        var initialState = new AppState("tree", new HomeState(), TableState.create(0, 0), AnimState.create(0), TreeState.create([2]));
-        var toState = treeTransform(initialState, [reverse]);
-        onUpdate(initialState, "init");
         var state = "uibench_" + Math.random();
+        // Check tables
+        var tableInit = new AppState("table", new HomeState(), TableState.create(3, 1), AnimState.create(0), TreeState.create([0]));
+        var tableUpdate = tableFilterBy(tableInit, 2);
+        onUpdate(tableInit, "init");
+        var tableRows = document.getElementsByClassName("TableRow");
+        tableRows[2]._uibenchState = state;
+        onUpdate(tableUpdate, "init");
+        tableRows = document.getElementsByClassName("TableRow");
+        var result = tableRows[1]._uibenchState === state;
+        // Check trees
+        var treeInit = new AppState("tree", new HomeState(), TableState.create(0, 0), AnimState.create(0), TreeState.create([2]));
+        var treeUpdate = treeTransform(treeInit, [reverse]);
+        onUpdate(treeInit, "init");
         var treeLeafs = document.getElementsByClassName("TreeLeaf");
         treeLeafs[0]._uibenchState = state;
-        onUpdate(toState, "update");
+        onUpdate(treeUpdate, "update");
         treeLeafs = document.getElementsByClassName("TreeLeaf");
-        var result = (treeLeafs[1]._uibenchState === state);
+        result = result && (treeLeafs[1]._uibenchState === state);
         window.requestAnimationFrame(function () {
             onFinish(result);
         });
