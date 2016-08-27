@@ -261,7 +261,7 @@
     }
 
     function tableTests(onUpdate) {
-        var state = new AppState("table", new HomeState(), TableState.create(2, 2), AnimState.create(0), TreeState.create([0]));
+        var state = tableActivateEach(new AppState("table", new HomeState(), TableState.create(2, 2), AnimState.create(0), TreeState.create([0])), 2);
         state.table.items[0].id = 300;
         state.table.items[1].id = 301;
         onUpdate(state, "update");
@@ -275,6 +275,9 @@
         }
         if (rows[0].getAttribute("data-id") !== "300") {
             throw new Error("Spec test failed: invalid data-id attribute in the TableRow");
+        }
+        if (rows[1].className.indexOf("active") === -1) {
+            throw new Error("Spec test failed: TableRow should have active className when it is activated");
         }
         var cells = document.getElementsByClassName("TableCell");
         if (cells.length !== 6) {
