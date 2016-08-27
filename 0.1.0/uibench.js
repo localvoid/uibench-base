@@ -160,7 +160,7 @@
         return new AppState(state.location, state.home, TableState.create(rows, cols), state.anim, state.tree);
     }
     function tableFilterBy(state, nth) {
-        return new AppState(state.location, state.home, new TableState(state.table.items.filter(function (item, i) { return !((i + 1) % nth); })), state.anim, state.tree);
+        return new AppState(state.location, state.home, new TableState(state.table.items.filter(function (item, i) { return (i + 1) % nth; })), state.anim, state.tree);
     }
     function tableSortBy(state, i) {
         var newItems = state.table.items.slice();
