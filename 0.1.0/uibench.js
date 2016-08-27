@@ -160,7 +160,7 @@
         return new AppState(state.location, state.home, TableState.create(rows, cols), state.anim, state.tree);
     }
     function tableFilterBy(state, nth) {
-        return new AppState(state.location, state.home, new TableState(state.table.items.filter(function (item, i) { return !(i % nth); })), state.anim, state.tree);
+        return new AppState(state.location, state.home, new TableState(state.table.items.filter(function (item, i) { return !((i + 1) % nth); })), state.anim, state.tree);
     }
     function tableSortBy(state, i) {
         var newItems = state.table.items.slice();
@@ -168,10 +168,12 @@
         return new AppState(state.location, state.home, new TableState(newItems), state.anim, state.tree);
     }
     function tableActivateEach(state, nth) {
-        return new AppState(state.location, state.home, new TableState(state.table.items.map(function (item, i) { return i % nth ? item : new TableItemState(item.id, true, item.props); })), state.anim, state.tree);
+        return new AppState(state.location, state.home, new TableState(state.table.items.map(function (item, i) { return (i + 1) % nth ?
+            item :
+            new TableItemState(item.id, true, item.props); })), state.anim, state.tree);
     }
     function animAdvanceEach(state, nth) {
-        return new AppState(state.location, state.home, state.table, new AnimState(state.anim.items.map(function (item, i) { return i % nth ? item : new AnimBoxState(item.id, item.time + 1); })), state.tree);
+        return new AppState(state.location, state.home, state.table, new AnimState(state.anim.items.map(function (item, i) { return (i + 1) % nth ? item : new AnimBoxState(item.id, item.time + 1); })), state.tree);
     }
     function treeCreate(state, hierarchy) {
         return new AppState(state.location, state.home, state.table, state.anim, TreeState.create(hierarchy));
@@ -470,7 +472,7 @@
         disableChecks: false,
         startDelay: 0,
     };
-    var times = {
+    var timing = {
         start: 0,
         run: 0,
         firstRender: 0,
@@ -915,7 +917,7 @@
         var t = performance.now();
         onUpdate(state, "init");
         function finish() {
-            times.firstRender = performance.now() - t;
+            timing.firstRender = performance.now() - t;
             done();
         }
         if (config.fullRenderTime) {
@@ -926,7 +928,7 @@
         }
     }
     function run(onUpdate, onFinish, filter) {
-        times.run = performance.now();
+        timing.run = performance.now();
         if (memory.initial !== 0) {
             memory.start = performance.memory.usedJSHeapSize;
         }
@@ -967,7 +969,7 @@
                                                 "recycling": recyclingEnabled,
                                                 "disableChecks": config.disableChecks,
                                             },
-                                            "times": times,
+                                            "timing": timing,
                                             "memory": memory,
                                             "iterations": config.iterations,
                                             "samples": samples,
@@ -995,7 +997,7 @@
             });
         });
     }
-    times.start = performance.now();
+    timing.start = performance.now();
 
     exports.config = config;
     exports.init = init;
